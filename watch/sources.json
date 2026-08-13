@@ -57,12 +57,14 @@
     },
     {
       "id": "llmstxt-stance",
-      "name": "Google 對 llms.txt 的官方立場",
-      "version": "2026-06-15 changelog",
-      "url": null,
+      "name": "Google 對 llms.txt 的官方立場（AI 功能與你的網站指南）",
+      "version": "頁面標示 2026-07-10 更新",
+      "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
       "usedBy": ["SITE-LLMSTXT-MISSING 的訊息措辭"],
       "watch": "updated",
-      "note": "⚠ 待補網址。skill 裡引用了「Google 2026-06 官方明確表示不使用 llms.txt」，但沒有留下可查證的位置——這正是這份清單要修的問題。"
+      "quote": "You don't need to create new machine readable files, AI text files, markup, or Markdown to appear in Google Search (including its generative AI capabilities), as Google Search itself doesn't use them... Doing so will neither harm nor help your site's visibility or rankings in Google Search, as Google Search ignores them.",
+      "section": "Mythbusting generative AI search: what you don't need to do",
+      "note": "補上網址時順帶發現：原始筆記記的段落標題是「Clarifying guidance on llms.txt files」，實際查證是上面那個。逐字聲明無誤、標題是轉述——只留標題不留網址的話，這個錯永遠不會被發現。"
     }
   ]
 }

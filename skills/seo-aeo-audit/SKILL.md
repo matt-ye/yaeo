@@ -141,7 +141,7 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 
 （`Google-Extended` 的作用範圍隨 Google 政策調整過，設定前回查官方文件當日說明。）
 
-**llms.txt**：Google 2026-06 官方明確表示不使用它。成本是幾分鐘，放無妨，
+**llms.txt**：Google [官方明確表示不使用它](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide)（逐字聲明見文末「出處」）。成本是幾分鐘，放無妨，
 但**不要期待排名或引用率提升**，也不要在提案裡把它講成必做項。
 
 #### 頁層級（可引用性）
@@ -288,7 +288,24 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 
 ## 出處
 
-- Google SEO Starter Guide（最後更新 2025-12-10）
-- Google Search Quality Rater Guidelines 2025-09-11 版（182 頁）——L4 全部頁碼依據
-- GEO 論文（Princeton 等，KDD 2024）——五戰術
-- Google 官方 llms.txt 立場（2026-06-15 changelog）
+**出處要能被解析成可驗證的位置，不能只寫名稱。** 只寫名稱的話，
+「這條規則還成立嗎」沒辦法回查，也沒辦法自動監測它有沒有悄悄改版。
+
+| 來源 | 用在哪 |
+|---|---|
+| [Google Search Quality Rater Guidelines](https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf)（2025-09-11 版，182 頁） | L4 全部頁碼依據 |
+| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024） | 五戰術與 `L3-GEO-*` |
+| [Google SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide) | L1 多數規則 |
+| [Google robots.txt 規範](https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt) | `SITE-ROBOTS-*`、`SITE-AI-*` |
+| [Google 結構化資料總覽](https://developers.google.com/search/docs/appearance/structured-data/search-gallery) | `L2-JSONLD-*`、`L2-ARTICLE-*` |
+| [Google AI 功能與你的網站](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) | `SITE-LLMSTXT-MISSING` 的措辭 |
+
+最後一條的逐字聲明（段落「Mythbusting generative AI search: what you don't need to do」）：
+
+> "You don't need to create new machine readable files, AI text files, markup, or
+> Markdown to appear in Google Search (including its generative AI capabilities),
+> as Google Search itself doesn't use them... Doing so will neither harm nor help
+> your site's visibility or rankings in Google Search, as Google Search ignores them."
+
+這份清單的機器可讀版在 [`watch/sources.json`](https://github.com/matt-ye/yaeo/blob/main/watch/sources.json)，
+由 GitHub Actions 每月檢查是否失效或改版。

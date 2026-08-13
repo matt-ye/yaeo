@@ -3,12 +3,16 @@
     "checkedAt": "2026-08-13",
     "updated": "2025-12-10"
   },
+  "robots-spec": {
+    "checkedAt": "2026-08-13",
+    "updated": "2026-07-08"
+  },
   "structured-data": {
     "checkedAt": "2026-08-13",
     "updated": "2026-06-15"
   },
-  "robots-spec": {
+  "llmstxt-stance": {
     "checkedAt": "2026-08-13",
-    "updated": "2026-07-08"
+    "updated": "2026-07-10"
   }
 }
