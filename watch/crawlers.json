@@ -1,0 +1,120 @@
+{
+  "_comment": [
+    "SITE-AI-* 那組規則依賴一份爬蟲 User-Agent 清單。清單會過期：",
+    "廠商會新增爬蟲（OpenAI 在 2024 從 GPTBot 一支變成三支）、改名、或停用。",
+    "清單過期的症狀是靜默的——檢核器照跑，只是漏掉新的爬蟲。",
+    "",
+    "這裡的檢查很單純：**每個名稱是否仍出現在其廠商的官方文件裡**。",
+    "這是二元事實，不需要判讀。",
+    "",
+    "docUrl 為 null = 尚未查證到官方文件。刻意不用猜的網址填滿——",
+    "查不到的東西沒辦法監測，假裝有反而更糟。",
+    "",
+    "inRules: false = 記錄但不納入 SITE-AI-* 規則。排除理由逐支寫在 note，",
+    "因為理由不只一種：有的只抓站長自己提交或要求的內容（擋了沒意義），",
+    "有的是廣告生態的爬蟲（自主爬取，但不影響 AI 回答的引用與訓練同意）。",
+    "仍然列在這裡，是為了讓每月檢查不要每次都把它們當成「新發現」重報。"
+  ],
+  "vendors": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "docUrl": "https://developers.openai.com/api/docs/bots",
+      "crawlers": [
+        { "ua": "GPTBot", "type": "training" },
+        { "ua": "OAI-SearchBot", "type": "retrieval" },
+        { "ua": "ChatGPT-User", "type": "user-triggered" },
+        {
+          "ua": "OAI-AdsBot",
+          "type": "owner-initiated",
+          "inRules": false,
+          "note": "只驗證站長自己送去 ChatGPT 投放的廣告落地頁，官方明載不用於訓練基礎模型。2026-08 檢查器反向比對發現。"
+        }
+      ],
+      "note": "原網址 platform.openai.com/docs/bots 已 301 至現址（2026-08 查證）。文件中的 token 帶版本號（GPTBot/1.4），清單存不含版本的名稱以求穩定。"
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "docUrl": "https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "crawlers": [
+        { "ua": "ClaudeBot", "type": "training" },
+        { "ua": "Claude-SearchBot", "type": "retrieval" },
+        { "ua": "Claude-User", "type": "user-triggered" }
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "docUrl": "https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers",
+      "crawlers": [
+        { "ua": "Google-Extended", "type": "training", "note": "作用範圍隨 Google 政策調整過，設定前回查當日說明" },
+        {
+          "ua": "Google-CloudVertexBot",
+          "type": "owner-initiated",
+          "inRules": false,
+          "note": "只在站長自己建 Vertex AI Agent 並要求抓取時才動作，不是自主爬取。2026-08 檢查器反向比對發現。"
+        }
+      ]
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "docUrl": "https://support.apple.com/en-us/119829",
+      "crawlers": [
+        { "ua": "Applebot", "type": "retrieval" },
+        { "ua": "Applebot-Extended", "type": "training" }
+      ]
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "docUrl": "https://developer.amazon.com/amazonbot",
+      "crawlers": [
+        { "ua": "Amazonbot", "type": "training" },
+        { "ua": "Amzn-SearchBot", "type": "retrieval" },
+        { "ua": "Amzn-User", "type": "user-triggered" }
+      ]
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity",
+      "docUrl": "https://docs.perplexity.ai/docs/resources/perplexity-crawlers",
+      "crawlers": [
+        { "ua": "PerplexityBot", "type": "retrieval" },
+        { "ua": "Perplexity-User", "type": "user-triggered" }
+      ],
+      "note": "舊網址 docs.perplexity.ai/guides/bots 已 301 至現址（2026-08 查證）。需帶瀏覽器 UA，預設 UA 會被拒絕連線。"
+    },
+    {
+      "id": "meta",
+      "name": "Meta",
+      "docUrl": null,
+      "crawlers": [
+        { "ua": "meta-webindexer", "type": "retrieval" },
+        { "ua": "meta-externalagent", "type": "training" },
+        { "ua": "meta-externalfetcher", "type": "user-triggered" },
+        {
+          "ua": "meta-externalads",
+          "type": "advertising",
+          "inRules": false,
+          "note": "自主爬取（不是站長提交觸發），但供廣告與商業產品使用，不影響 AI 回答的引用或訓練同意——超出本 skill 的範圍。2026-08 查證新增。"
+        }
+      ],
+      "note": "文件位置為 developers.facebook.com/documentation/sharing/webmasters/web-crawlers（2026-08 查證，路徑已由 /docs/ 改為 /documentation/），內容確認三支主要爬蟲都仍在。但該頁對程式化抓取一律回 HTTP 400（換網址、換 UA 皆然，推測需 cookie／JS），無法自動監測，故 docUrl 維持 null。內容改版要靠人工回查。"
+    },
+    {
+      "id": "commoncrawl",
+      "name": "Common Crawl",
+      "docUrl": "https://commoncrawl.org/ccbot",
+      "crawlers": [{ "ua": "CCBot", "type": "training" }]
+    },
+    {
+      "id": "bytedance",
+      "name": "ByteDance",
+      "docUrl": null,
+      "crawlers": [{ "ua": "Bytespider", "type": "training" }],
+      "note": "查無官方文件頁。這支爬蟲的資訊多來自第三方觀測與 robots.txt 慣例，證據等級低於其他家——skill 裡引用時應標明。"
+    }
+  ]
+}

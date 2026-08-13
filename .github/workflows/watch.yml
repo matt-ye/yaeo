@@ -31,6 +31,12 @@ jobs:
         id: sources
         run: node watch/check-sources.mjs --out report.md
 
+      # 刻意不加 continue-on-error：每家廠商的網路錯誤都在腳本裡個別接住了，
+      # 所以這一步失敗＝腳本真的壞了。壞掉要看得見，不要出一份靜靜少了 ② 的報告。
+      - name: ② 爬蟲清單檢查
+        id: crawlers
+        run: node watch/check-crawlers.mjs --out report.md --append
+
       - name: 回寫狀態檔
         # 狀態檔是「上次看到的樣子」，不回寫的話每次都會是 baseline，
         # 永遠偵測不到變動。
@@ -49,10 +55,14 @@ jobs:
         run: |
           gh label create source-watch --color 1d76db --description "定期出處與生態檢查" 2>/dev/null || true
           month="$(date -u +%Y-%m)"
-          n="${{ steps.sources.outputs.sources_actionable }}"
-          if [ "${n:-0}" -gt 0 ]; then
-            title="🔔 出處檢查 — ${n} 項待看 — ${month}"
+          n1="${{ steps.sources.outputs.sources_actionable }}"
+          n2="${{ steps.crawlers.outputs.crawlers_actionable }}"
+          total=$(( ${n1:-0} + ${n2:-0} ))
+          # 標題把兩項分開列，因為它們的處理方式不同：出處變動要回讀原文改規則，
+          # 爬蟲變動多半只要更新清單。合成一個數字會看不出該花多少力氣。
+          if [ "$total" -gt 0 ]; then
+            title="🔔 定期檢查 — 出處 ${n1:-0}／爬蟲 ${n2:-0} 項待看 — ${month}"
           else
-            title="✅ 出處檢查 — ${month}（無變動）"
+            title="✅ 定期檢查 — ${month}（無變動）"
           fi
           gh issue create --title "$title" --label source-watch --body-file report.md

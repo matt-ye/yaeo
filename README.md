@@ -82,7 +82,23 @@ node skills/seo-aeo-audit/scripts/seo-check.mjs --dir ./dist --site https://exam
 | [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024） | 五戰術與 `L3-GEO-*` |
 | Google Search Central 官方文件 | L1／L2 多數規則 |
 
-`watch/sources.json` 是機器可讀的完整清單，由 GitHub Actions 定期檢查是否失效。
+`watch/sources.json` 是機器可讀的完整清單，由 GitHub Actions 每月檢查是否失效。
+
+### 定期檢查在檢查什麼
+
+規則會過期，而**過期的症狀是靜默的**——檢核器照跑、報告照出，只是依據已經不成立了。
+所以 `watch/` 每月做兩件事，結果開成 issue，**只報告、不自動改規則**
+（要不要跟著改是需要讀原文判斷的事）：
+
+| | 檢查 | 怎麼偵測 |
+|---|---|---|
+| ① | 出處還在不在、有沒有悄悄改版 | 依來源性質分三種模式：PDF 比檔案大小、arXiv 比版本號、Google devsite 比頁面自帶的 `Last updated` |
+| ② | AI 爬蟲清單有沒有變 | 正向：清單裡的名稱是否仍在官方文件裡；反向：文件裡有沒有清單外的新爬蟲 |
+
+②的反向檢查在 2026-08 首跑時抓到三支清單外的爬蟲（`OAI-AdsBot`、
+`Google-CloudVertexBot`、`meta-externalads`）。三支都經查證後**刻意不納入規則**——
+前兩支只抓站長自己提交或要求的內容，第三支屬廣告生態，都不影響 AI 回答的引用
+與訓練同意。理由逐支記在 `watch/crawlers.json`，這樣下個月不會再被當成新發現重報。
 
 ---
 
