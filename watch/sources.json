@@ -1,0 +1,68 @@
+{
+  "_comment": [
+    "這個 skill 的核心紀律是「每條規則帶出處」。出處只寫名稱是執行到一半——",
+    "查不到的東西也沒辦法監測它有沒有變。這份清單讓出處變成可驗證的位置。",
+    "",
+    "url 為 null = 尚未查證到官方位置。check-sources.mjs 會把它列成待補，",
+    "而不是假裝有。刻意不用猜的網址填滿——那正好違反這個 repo 的規則。",
+    "",
+    "hash 由第一次成功抓取時寫入，之後用來偵測內容變動。",
+    "官方文件常常悄悄改版而沒有公告，這是唯一能發現的方式。"
+  ],
+  "sources": [
+    {
+      "id": "rater-guidelines",
+      "name": "Google Search Quality Rater Guidelines",
+      "version": "2025-09-11",
+      "url": "https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf",
+      "usedBy": ["L4 全部頁碼依據"],
+      "watch": "size",
+      "note": "PDF。內容雜湊每次下載都可能因產生時間而不同，所以比對檔案大小與 Last-Modified。"
+    },
+    {
+      "id": "geo-paper",
+      "name": "GEO: Generative Engine Optimization (Aggarwal et al., KDD 2024)",
+      "version": "arXiv 2311.09735",
+      "url": "https://arxiv.org/abs/2311.09735",
+      "usedBy": ["L3-GEO-SIGNALS-*", "寫作階段：GEO 五戰術"],
+      "watch": "version",
+      "note": "論文本身不會改，但 arXiv 可能有新版本（v3、v4）。監測版本號而非內容。"
+    },
+    {
+      "id": "seo-starter-guide",
+      "name": "Google SEO Starter Guide",
+      "version": "2025-12-10",
+      "url": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+      "usedBy": ["L1 多數規則"],
+      "watch": "updated",
+      "note": "devsite 頁面自帶 Last updated 標記，比雜湊整頁穩定。"
+    },
+    {
+      "id": "robots-spec",
+      "name": "Google robots.txt 規範",
+      "version": null,
+      "url": "https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt",
+      "usedBy": ["SITE-ROBOTS-*", "SITE-AI-*"],
+      "watch": "updated",
+      "note": "devsite 頁面自帶 Last updated 標記。"
+    },
+    {
+      "id": "structured-data",
+      "name": "Google 結構化資料總覽",
+      "version": null,
+      "url": "https://developers.google.com/search/docs/appearance/structured-data/search-gallery",
+      "usedBy": ["L2-JSONLD-*", "L2-BREADCRUMB-MISSING", "L2-ARTICLE-*"],
+      "watch": "updated",
+      "note": "devsite 頁面自帶 Last updated 標記。"
+    },
+    {
+      "id": "llmstxt-stance",
+      "name": "Google 對 llms.txt 的官方立場",
+      "version": "2026-06-15 changelog",
+      "url": null,
+      "usedBy": ["SITE-LLMSTXT-MISSING 的訊息措辭"],
+      "watch": "updated",
+      "note": "⚠ 待補網址。skill 裡引用了「Google 2026-06 官方明確表示不使用 llms.txt」，但沒有留下可查證的位置——這正是這份清單要修的問題。"
+    }
+  ]
+}

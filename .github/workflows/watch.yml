@@ -1,0 +1,58 @@
+name: Source & ecosystem watch
+
+# 這個 repo 的核心宣稱是「每條規則都附出處」。宣稱要一直成立，出處就得
+# 一直活著、而且沒有悄悄改掉——官方文件改版通常沒有公告。
+#
+# ⚠ 設計上的紅線：這個 workflow **只產出報告、開 issue，絕不自動改 skill**。
+#   規則要不要跟著改，是需要讀原文判斷的事。讓機器自動改，它會很樂意把
+#   一篇部落格的宣稱寫成規則——那正是這個 repo 反對的做法。
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'      # 每月 1 號 06:00 UTC（台北 14:00）
+  workflow_dispatch: {}       # 隨時可手動跑
+
+permissions:
+  contents: write             # 需要 write：狀態檔（sources.state.json）要回寫
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 零相依——刻意不用任何 npm 套件，這樣 skill 的使用者可以直接跑腳本
+      - name: ① 出處存活檢查
+        id: sources
+        run: node watch/check-sources.mjs --out report.md
+
+      - name: 回寫狀態檔
+        # 狀態檔是「上次看到的樣子」，不回寫的話每次都會是 baseline，
+        # 永遠偵測不到變動。
+        run: |
+          if ! git diff --quiet -- watch/sources.state.json; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add watch/sources.state.json
+            git commit -m "watch: 更新出處狀態基準 [skip ci]"
+            git push
+          fi
+
+      - name: 開 issue 通知
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create source-watch --color 1d76db --description "定期出處與生態檢查" 2>/dev/null || true
+          month="$(date -u +%Y-%m)"
+          n="${{ steps.sources.outputs.sources_actionable }}"
+          if [ "${n:-0}" -gt 0 ]; then
+            title="🔔 出處檢查 — ${n} 項待看 — ${month}"
+          else
+            title="✅ 出處檢查 — ${month}（無變動）"
+          fi
+          gh issue create --title "$title" --label source-watch --body-file report.md
