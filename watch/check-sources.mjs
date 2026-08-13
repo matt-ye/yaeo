@@ -111,6 +111,7 @@ for (const s of cfg.sources) {
         ...s, status: changed ? 'changed' : prev.size ? 'same' : 'baseline',
         detail: changed ? `大小 ${prev.size} → ${now.size}` : `${Math.round(Number(now.size) / 1024)} KB`,
       });
+      state[s.id] = { ...prev, ...now };
     } else if (s.watch === 'version') {
       /* arXiv 的頁面按時間順序列出所有版本（[v1] … [v2] …），
          **最後一個才是目前版本**——取第一個會永遠停在 v1。 */
@@ -122,6 +123,7 @@ for (const s of cfg.sources) {
         ...s, status: changed ? 'changed' : prev.version ? 'same' : 'baseline',
         detail: changed ? `v${prev.version} → v${now.version}` : `v${now.version}`,
       });
+      state[s.id] = { ...prev, ...now };
     } else if (s.watch === 'updated') {
       /*
        * Google 的 devsite 文件頁自己會印「Last updated YYYY-MM-DD UTC」。
@@ -193,6 +195,25 @@ for (const s of cfg.sources) {
   } catch (err) {
     results.push({ ...s, status: 'unreachable', detail: err.message });
   }
+}
+
+/*
+ * 守衛：每個「成功量測到」的來源都必須留下狀態。
+ *
+ * 實際踩過：為了避免重複寫入而把共用的 state 寫入行刪掉，卻只在其中兩個
+ * 分支補回去——另外兩個分支從此永遠是 baseline，**永遠偵測不到變動**。
+ * 腳本不報錯、報告看起來正常，只是那兩條線根本沒在監測。
+ *
+ * 這種「靜默失效」在監測系統裡最危險：你以為有人在看門，其實沒有。
+ */
+const measured = results.filter((r) => ['baseline', 'same', 'changed'].includes(r.status));
+const stateless = measured.filter((r) => !state[r.id]);
+if (stateless.length) {
+  console.error(
+    `✗ 這些來源量測成功卻沒有寫入狀態，下次會再次變成 baseline、永遠測不到變動：\n  ` +
+      stateless.map((r) => `${r.id}（watch: ${r.watch}）`).join('\n  '),
+  );
+  process.exit(1);
 }
 
 writeFileSync(STATE, JSON.stringify(state, null, 2) + '\n');
