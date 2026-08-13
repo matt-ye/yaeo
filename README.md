@@ -94,11 +94,29 @@ node skills/seo-aeo-audit/scripts/seo-check.mjs --dir ./dist --site https://exam
 |---|---|---|
 | ① | 出處還在不在、有沒有悄悄改版 | 依來源性質分三種模式：PDF 比檔案大小、arXiv 比版本號、Google devsite 比頁面自帶的 `Last updated` |
 | ② | AI 爬蟲清單有沒有變 | 正向：清單裡的名稱是否仍在官方文件裡；反向：文件裡有沒有清單外的新爬蟲 |
+| ③ | 有沒有出現我們還不知道的東西 | 掃 Google Search Central 部落格與 arXiv 的 GEO／AEO 論文，交給模型篩出「值得回去讀原文」的項目 |
 
 ②的反向檢查在 2026-08 首跑時抓到三支清單外的爬蟲（`OAI-AdsBot`、
 `Google-CloudVertexBot`、`meta-externalads`）。三支都經查證後**刻意不納入規則**——
 前兩支只抓站長自己提交或要求的內容，第三支屬廣告生態，都不影響 AI 回答的引用
 與訓練同意。理由逐支記在 `watch/crawlers.json`，這樣下個月不會再被當成新發現重報。
+
+③是整個 repo 最危險的一步——讓語言模型讀部落格再吐結論，**正好是這個 repo
+反對的做法**。所以它的產物明確定義為「線索」不是「規則」：只列出值得回去讀
+原文的項目、一律附原始連結、不產生任何規則文字、不改任何檔案，並且**在報告裡
+標明是哪個型號判讀的**——判讀要能追溯到判讀者。
+
+型號也不寫死：`CF_AI_MODEL` 優先，沒設就查當下的型號清單自動挑，並印出實際
+用了哪一個。寫死等於埋一個「供應商下架那天才會炸」的地雷。
+
+需要的環境變數（都是選填，沒設時對應的檢查會標成「本次未檢查」而不是顯示綠燈）：
+
+| 變數 | 用途 |
+|---|---|
+| `CF_ACCOUNT_ID`／`CF_API_TOKEN` | Browser Rendering（Meta 的爬蟲文件對一般抓取回 400，要真瀏覽器）＋ Workers AI（③的判讀） |
+| `CF_AI_MODEL` | 覆寫自動挑選。建議留空 |
+
+Token 權限：`Workers AI · Read`＋`Workers AI · Edit`＋`Browser Rendering · Edit`。
 
 ---
 
