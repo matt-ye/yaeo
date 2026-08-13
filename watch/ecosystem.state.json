@@ -1,4 +1,39 @@
 {
   "_comment": "看過的項目 ID。避免同幾篇論文每個月重報一次。空的 seen = 首次執行，全部項目都算新的。",
-  "seen": {}
+  "seen": {
+    "gsc-blog": [
+      "2026-07-29-Platform-properties-roll-out-globally,-plus-a-new-social-and-video-performance-guide",
+      "2026-07-07-See-how-content-from-social-and-video-platforms-performs-on-Google-Search",
+      "2026-07-06-Search-Central-Deep-Dive-Europe-2026:-Apparently-we're-going-to-Barcelona",
+      "2026-06-18-Help-Us-Pick-the-Next-Stop-in-Europe-for-Search-Central-Live-Deep-Dive-2026!",
+      "2026-06-03-Introducing-Search-Generative-AI-performance-reports-in-Search-Console",
+      "2026-05-15-A-new-resource-for-optimizing-for-generative-AI-in-Google-Search",
+      "2026-04-13-Introducing-a-new-spam-policy-for-\"back-button-hijacking\"",
+      "2026-04-02-Search-Central-Live-is-Coming-to-Shanghai-in-2026!",
+      "2026-03-31-New-Location-for-the-Google-Crawlers'-IP-Range-Files",
+      "2026-03-31-Inside-Googlebot:-demystifying-crawling,-fetching,-and-the-bytes-we-process"
+    ],
+    "arxiv-geo": [
+      "http://arxiv.org/abs/2608.11390v1",
+      "http://arxiv.org/abs/2607.20730v1",
+      "http://arxiv.org/abs/2607.14035v1",
+      "http://arxiv.org/abs/2607.14197v1",
+      "http://arxiv.org/abs/2607.12056v1",
+      "http://arxiv.org/abs/2606.27736v1",
+      "http://arxiv.org/abs/2606.20065v1",
+      "http://arxiv.org/abs/2606.17443v1",
+      "http://arxiv.org/abs/2606.16344v1",
+      "http://arxiv.org/abs/2606.28356v1",
+      "http://arxiv.org/abs/2606.04362v1",
+      "http://arxiv.org/abs/2605.29107v2",
+      "http://arxiv.org/abs/2605.25517v1",
+      "http://arxiv.org/abs/2605.21948v1",
+      "http://arxiv.org/abs/2606.12439v1",
+      "http://arxiv.org/abs/2605.12887v2",
+      "http://arxiv.org/abs/2605.09314v1",
+      "http://arxiv.org/abs/2604.27790v1",
+      "http://arxiv.org/abs/2604.25707v2",
+      "http://arxiv.org/abs/2604.19516v1"
+    ]
+  }
 }
