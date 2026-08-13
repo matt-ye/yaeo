@@ -27,7 +27,7 @@ SEO → AEO → GEO → LLMO，縮寫每季都在增加。這個 repo 不打算�
 
 | 路徑 | 是什麼 |
 |---|---|
-| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ 55 條規則 |
+| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ 57 條規則（L1 15／L2 25／L3 4／SITE 13） |
 | `skills/seo-aeo-audit/scripts/seo-check.mjs` | 零相依的靜態檢核器（Node，不需 npm install） |
 | `skills/seo-aeo-audit/scripts/psi-check.mjs` | PageSpeed Insights 包裝（需自己的 API key） |
 | `watch/` | 定期檢索：出處是否失效、爬蟲清單是否變動、生態是否有新縮寫 |

@@ -109,9 +109,14 @@ for (const f of FEEDS) {
 }
 
 /* 現行規則清單直接從檢核器原始碼抽，不另外維護一份——
-   另外維護的那份一定會過期，而且過期時沒有人會發現。 */
+   另外維護的那份一定會過期，而且過期時沒有人會發現。
+
+   嚴重度不一定是字面值：有幾條寫成 add(cond ? 'info' : 'warn', 'RULE-ID', …)。
+   第一版的正則只認字面值，靜靜漏掉那幾條——送給模型的規則清單就少了，
+   模型會把已經涵蓋的主題當成新發現。抓法是不管第一個參數長什麼樣，
+   只認第二個位置的規則代號。 */
 const ruleIds = [...new Set(
-  [...readFileSync(RULES_SRC, 'utf8').matchAll(/add\(\s*'(?:error|warn|info)'\s*,\s*'([A-Z0-9-]+)'/g)].map((m) => m[1]),
+  [...readFileSync(RULES_SRC, 'utf8').matchAll(/\badd\([^,]+,\s*'([A-Z][A-Z0-9-]+)'/g)].map((m) => m[1]),
 )];
 
 const lines = ['\n## ③ 生態掃描\n'];

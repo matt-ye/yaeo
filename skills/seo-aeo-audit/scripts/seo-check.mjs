@@ -184,6 +184,31 @@ function auditPage(rawHtml, page) {
   const robotsMeta = metaContent(html, 'robots');
   if (robotsMeta && /noindex/i.test(robotsMeta)) add('info', 'L1-NOINDEX', `此頁標記 noindex（${robotsMeta}）—— 確認是刻意的`);
 
+  /* 快照資格是生成式 AI 功能的**前提**，不是加分項。Google 官方原文：
+       "To be eligible to be shown in generative AI features on Google Search,
+        a page must be indexed and eligible to be shown in Google Search with
+        a snippet, fulfilling the Search technical requirements."
+       — developers.google.com/search/docs/fundamentals/ai-optimization-guide
+
+     這是這份檢核器裡少數「一個屬性直接決定能不能被 AI 引用」的地方，
+     所以獨立成規則而不是併進 L1-NOINDEX——後果不一樣：noindex 是不進索引，
+     nosnippet 是進了索引但 AI Overviews／AI Mode 用不了。
+
+     已經 noindex 的頁不報：它本來就不會出現，再講一次 AI 看不到是廢話。 */
+  if (robotsMeta && !/noindex/i.test(robotsMeta)) {
+    const zeroSnippet = /\bmax-snippet\s*:\s*0\b/i.test(robotsMeta);
+    if (/\bnosnippet\b/i.test(robotsMeta) || zeroSnippet) {
+      add('warn', 'L3-AI-SNIPPET-BLOCKED',
+        `meta robots 含 ${zeroSnippet ? 'max-snippet:0' : 'nosnippet'}（${robotsMeta}）——本頁雖然進得了索引，但不具快照資格，Google 官方明載這是生成式 AI 功能的前提。若非刻意（如付費牆），等於自願退出 AI Overviews／AI Mode`);
+    }
+  }
+  /* 元素層級的 data-nosnippet 只擋部分內容，不影響整頁資格，所以只記錄。
+     值得記錄是因為它常被套在正文容器上，作用範圍比作者以為的大。 */
+  const dataNosnippet = (dom.match(/\bdata-nosnippet\b/gi) ?? []).length;
+  if (dataNosnippet) {
+    add('info', 'L3-AI-SNIPPET-PARTIAL', `有 ${dataNosnippet} 處 data-nosnippet——這些區塊不會被摘錄，確認沒有蓋到想被引用的正文`, dataNosnippet);
+  }
+
   // ---- L2 內容結構 ----
   const headings = [...dom.matchAll(/<(h[1-6])\b([^>]*)>([\s\S]*?)<\/\1>/gi)]
     .map((m) => ({ tag: m[1].toLowerCase(), level: +m[1][1], inner: m[3], text: stripTags(m[3]) }));
@@ -400,7 +425,19 @@ function auditPage(rawHtml, page) {
         把弱訊號寫成 error 正是本 skill 反對的做法。
      ② 不給目標數字。論文沒有提供閾值，我們也不編一個出來。
      ③ 只對 Article 型頁面檢查。列表頁、工具頁沒有引用來源是正常的，
-        對它們報這條只會製造雜訊。 */
+        對它們報這條只會製造雜訊。
+
+     ⚠ 2026-08 補記——證據強度要往下調。
+     一篇回顧 45 篇研究（2023-11～2026-07）的批判性綜述指出，KDD 2024 那些
+     被廣泛引用的增益「在其實驗設定內成立，但**以來源已經出現在固定脈絡中
+     為前提**；既未證實自然可發現性，也未證實持久的流量效果」，而且
+     「以被引用為目標的改寫**可能損害檢索表現**」。
+     — arXiv 2607.14035《Optimizing Visibility in Generative Engines》
+
+     也就是說：這三項訊號影響的是「已經被撈進來之後會不會被引用」，
+     不是「會不會被撈進來」。原本的訊息寫「唯一有同行評審實驗支持的槓桿」
+     說過頭了——有實驗支持是真的，但支持的範圍比那句話窄。
+     克制的做法本來就對（info、不給數字），這次只調措辭，不改嚴重度。 */
   if (articleish) {
     const mainHtml = (bodyM ? bodyM[1] : dom).replace(chrome, '');
     const text = stripTags(mainHtml);
@@ -438,7 +475,7 @@ function auditPage(rawHtml, page) {
 
     if (missing.length === 3) {
       add('info', 'L3-GEO-SIGNALS-NONE',
-        `這頁沒有外部引用、統計數據與直接引言——若目標是被生成式引擎引用，這三項是目前唯一有同行評審實驗支持的槓桿（GEO, KDD 2024）`);
+        `這頁沒有外部引用、統計數據與直接引言——這三項有實驗支持能提高「被撈到之後獲得引用」的機率（GEO, KDD 2024），但 2026 綜述指出該效果以來源已進入脈絡為前提，不等於提升被發現的機會`);
     } else if (missing.length) {
       add('info', 'L3-GEO-SIGNALS-THIN',
         `GEO 訊號偏少（缺${missing.join('、')}；現有 外部引用 ${outbound.size} 個、統計 ${stats} 處、引言 ${quotes} 處）`);

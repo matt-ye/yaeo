@@ -146,10 +146,33 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 
 #### 頁層級（可引用性）
 
+**先確認資格，再談訊號。** `L3-AI-SNIPPET-BLOCKED` 檢查 meta robots 有沒有
+`nosnippet` 或 `max-snippet:0`。Google 官方明載：
+
+> "To be eligible to be shown in generative AI features on Google Search,
+> a page must be indexed and eligible to be shown in Google Search **with a snippet**"
+
+快照資格是**前提**不是加分項。這條與 `L1-NOINDEX` 分開，因為後果不同——
+noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode 用不了。
+已經 noindex 的頁不重複報。元素層級的 `data-nosnippet` 只報 `info`
+（`L3-AI-SNIPPET-PARTIAL`），它常被整個套在正文容器上，作用範圍比作者以為的大。
+
+---
+
 `L3-GEO-SIGNALS-NONE` / `L3-GEO-SIGNALS-THIN` 只對 **Article 型頁面**檢查，
 數三件事：**外部引用網域數、統計數據處數、直接引言處數**。
 
 這三項是下面「GEO 五戰術」裡唯一機械可偵測的部分（權威語氣與流暢度是語意判斷）。
+
+> ⚠ **2026-08 證據強度下修。** 一篇回顧 45 篇研究（2023-11～2026-07）的批判性綜述
+> （[arXiv 2607.14035](https://arxiv.org/abs/2607.14035)）指出，KDD 2024 那些被廣泛
+> 引用的增益「在其實驗設定內成立，但**以來源已經出現在固定脈絡中為前提**；
+> 既未證實自然可發現性，也未證實持久的流量效果」，而且「以被引用為目標的改寫
+> **可能損害檢索表現**」。
+>
+> 也就是說這三項影響的是「**被撈到之後**會不會被引用」，不是「會不會被撈到」。
+> 原本的訊息寫「唯一有同行評審實驗支持的槓桿」說過頭了，已改。
+> 嚴重度不變——本來就只報 `info`、本來就不給數字，克制的做法是對的。
 
 **三件刻意的克制**，也是使用這條規則時該有的態度：
 

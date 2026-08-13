@@ -29,6 +29,16 @@
       "note": "論文本身不會改，但 arXiv 可能有新版本（v3、v4）。監測版本號而非內容。"
     },
     {
+      "id": "geo-survey-2026",
+      "name": "Optimizing Visibility in Generative Engines: A Critical Survey of GEO (2023-2026)",
+      "version": "arXiv 2607.14035",
+      "url": "https://arxiv.org/abs/2607.14035",
+      "usedBy": ["L3-GEO-SIGNALS-* 的證據強度限定"],
+      "watch": "version",
+      "quote": "widely cited gains are valid within its experimental setting but conditional on a source already being present in a fixed context; they establish neither organic discoverability nor durable traffic effects",
+      "note": "回顧 45 篇研究後對 KDD 2024 那篇的限定。由 ③ 生態掃描於 2026-08 首跑時發現——這正是定期檢索要抓的東西：依據沒有失效，但適用範圍被縮小了，而原始論文不會通知你。"
+    },
+    {
       "id": "seo-starter-guide",
       "name": "Google SEO Starter Guide",
       "version": "2025-12-10",
@@ -60,7 +70,9 @@
       "name": "Google 對 llms.txt 的官方立場（AI 功能與你的網站指南）",
       "version": "頁面標示 2026-07-10 更新",
       "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
-      "usedBy": ["SITE-LLMSTXT-MISSING 的訊息措辭"],
+      "usedBy": ["SITE-LLMSTXT-MISSING 的訊息措辭", "L3-AI-SNIPPET-BLOCKED"],
+      "quote2": "To be eligible to be shown in generative AI features on Google Search, a page must be indexed and eligible to be shown in Google Search with a snippet, fulfilling the Search technical requirements.",
+      "section2": "Technical requirements（L3-AI-SNIPPET-BLOCKED 的依據）",
       "watch": "updated",
       "quote": "You don't need to create new machine readable files, AI text files, markup, or Markdown to appear in Google Search (including its generative AI capabilities), as Google Search itself doesn't use them... Doing so will neither harm nor help your site's visibility or rankings in Google Search, as Google Search ignores them.",
       "section": "Mythbusting generative AI search: what you don't need to do",
