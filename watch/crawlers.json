@@ -89,7 +89,6 @@
     {
       "id": "meta",
       "name": "Meta",
-      "docUrl": null,
       "crawlers": [
         { "ua": "meta-webindexer", "type": "retrieval" },
         { "ua": "meta-externalagent", "type": "training" },
@@ -101,7 +100,9 @@
           "note": "自主爬取（不是站長提交觸發），但供廣告與商業產品使用，不影響 AI 回答的引用或訓練同意——超出本 skill 的範圍。2026-08 查證新增。"
         }
       ],
-      "note": "文件位置為 developers.facebook.com/documentation/sharing/webmasters/web-crawlers（2026-08 查證，路徑已由 /docs/ 改為 /documentation/），內容確認三支主要爬蟲都仍在。但該頁對程式化抓取一律回 HTTP 400（換網址、換 UA 皆然，推測需 cookie／JS），無法自動監測，故 docUrl 維持 null。內容改版要靠人工回查。"
+      "docUrl": "https://developers.facebook.com/documentation/sharing/webmasters/web-crawlers",
+      "fetch": "browser",
+      "note": "路徑 2026-08 由 /docs/ 改為 /documentation/。該頁對一般程式化抓取一律回 HTTP 400（換網址、換 UA 皆然），必須用真瀏覽器，故走 Cloudflare Browser Rendering。"
     },
     {
       "id": "commoncrawl",

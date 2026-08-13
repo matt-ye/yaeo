@@ -35,17 +35,32 @@ jobs:
       # 所以這一步失敗＝腳本真的壞了。壞掉要看得見，不要出一份靜靜少了 ② 的報告。
       - name: ② 爬蟲清單檢查
         id: crawlers
+        # Meta 的爬蟲文件對一般程式化抓取一律回 400，要靠 Browser Rendering
+        # 開真瀏覽器。沒有金鑰時腳本會把那一家標成「本次未檢查」而不是靜靜跳過。
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: node watch/check-crawlers.mjs --out report.md --append
+
+      - name: ③ 生態掃描
+        id: ecosystem
+        # CF_AI_MODEL 刻意可以不設：不設時腳本會查當下的型號清單並印出實際
+        # 用了哪一個。寫死型號等於埋一個「供應商下架那天才會炸」的地雷。
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_AI_MODEL: ${{ secrets.CF_AI_MODEL }}
+        run: node watch/check-ecosystem.mjs --out report.md --append
 
       - name: 回寫狀態檔
         # 狀態檔是「上次看到的樣子」，不回寫的話每次都會是 baseline，
         # 永遠偵測不到變動。
         run: |
-          if ! git diff --quiet -- watch/sources.state.json; then
+          if ! git diff --quiet -- watch/sources.state.json watch/ecosystem.state.json; then
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add watch/sources.state.json
-            git commit -m "watch: 更新出處狀態基準 [skip ci]"
+            git add watch/sources.state.json watch/ecosystem.state.json
+            git commit -m "watch: 更新狀態基準 [skip ci]"
             git push
           fi
 
@@ -57,11 +72,13 @@ jobs:
           month="$(date -u +%Y-%m)"
           n1="${{ steps.sources.outputs.sources_actionable }}"
           n2="${{ steps.crawlers.outputs.crawlers_actionable }}"
-          total=$(( ${n1:-0} + ${n2:-0} ))
-          # 標題把兩項分開列，因為它們的處理方式不同：出處變動要回讀原文改規則，
-          # 爬蟲變動多半只要更新清單。合成一個數字會看不出該花多少力氣。
+          n3="${{ steps.ecosystem.outputs.ecosystem_actionable }}"
+          total=$(( ${n1:-0} + ${n2:-0} + ${n3:-0} ))
+          # 三項分開列，因為處理成本不同：出處變動要回讀原文改規則，爬蟲變動
+          # 多半只要更新清單，生態線索則是「要不要花時間讀」的判斷。
+          # 合成一個數字會看不出該花多少力氣在哪裡。
           if [ "$total" -gt 0 ]; then
-            title="🔔 定期檢查 — 出處 ${n1:-0}／爬蟲 ${n2:-0} 項待看 — ${month}"
+            title="🔔 定期檢查 — 出處 ${n1:-0}／爬蟲 ${n2:-0}／生態 ${n3:-0} — ${month}"
           else
             title="✅ 定期檢查 — ${month}（無變動）"
           fi

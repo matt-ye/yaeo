@@ -19,6 +19,7 @@
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { cfCreds, browserContent } from './cf.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const cfg = JSON.parse(readFileSync(join(__dirname, 'crawlers.json'), 'utf8'));
@@ -47,6 +48,7 @@ const IGNORE = new Set([
   'YandexBot', 'facebookexternalhit', 'Twitterbot', 'crawler', 'Crawler', 'bot', 'Bot',
 ]);
 
+const creds = cfCreds();
 const rows = [];
 
 for (const v of cfg.vendors) {
@@ -56,9 +58,18 @@ for (const v of cfg.vendors) {
   }
   let html;
   try {
-    const res = await get(v.docUrl);
-    if (!res.ok) { rows.push({ vendor: v.name, status: 'http-error', detail: `HTTP ${res.status}`, crawlers: [] }); continue; }
-    html = await res.text();
+    if (v.fetch === 'browser') {
+      /* 缺金鑰時不靜默跳過——少跑一項卻顯示綠燈，比檢查失敗更糟。 */
+      if (!creds) {
+        rows.push({ vendor: v.name, status: 'needs-browser', detail: '這家要真瀏覽器才抓得到，但沒有 CF_ACCOUNT_ID／CF_API_TOKEN，本次未檢查', crawlers: [] });
+        continue;
+      }
+      html = await browserContent(creds, v.docUrl);
+    } else {
+      const res = await get(v.docUrl);
+      if (!res.ok) { rows.push({ vendor: v.name, status: 'http-error', detail: `HTTP ${res.status}`, crawlers: [] }); continue; }
+      html = await res.text();
+    }
   } catch (err) {
     rows.push({ vendor: v.name, status: 'unreachable', detail: err.message, crawlers: [] });
     continue;
@@ -109,8 +120,8 @@ for (const v of cfg.vendors) {
   });
 }
 
-const ICON = { ok: '✅', missing: '🔔', 'new-candidates': '🆕', 'no-doc': '📌', 'http-error': '❌', unreachable: '⚠️' };
-const actionable = rows.filter((r) => ['missing', 'new-candidates', 'no-doc', 'http-error'].includes(r.status));
+const ICON = { ok: '✅', missing: '🔔', 'new-candidates': '🆕', 'no-doc': '📌', 'http-error': '❌', unreachable: '⚠️', 'needs-browser': '🔑' };
+const actionable = rows.filter((r) => ['missing', 'new-candidates', 'no-doc', 'http-error', 'needs-browser', 'unreachable'].includes(r.status));
 
 const all = cfg.vendors.flatMap((v) => v.crawlers);
 const outOfScope = all.filter((c) => c.inRules === false);
@@ -138,6 +149,8 @@ if (actionable.length) {
     if (r.status === 'new-candidates') lines.push(`- **${r.vendor} 文件裡有清單外的名稱** — 逐一確認是不是 AI 爬蟲（樣式比對會有誤判），是的話補進清單並分類`);
     if (r.status === 'no-doc') lines.push(`- **${r.vendor} 還沒有可查證的官方文件** — ${r.detail}`);
     if (r.status === 'http-error') lines.push(`- **${r.vendor} 文件連不到（${r.detail}）** — 找新網址`);
+    if (r.status === 'needs-browser') lines.push(`- **${r.vendor} 本次未檢查** — ${r.detail}`);
+    if (r.status === 'unreachable') lines.push(`- **${r.vendor} 抓取失敗** — ${r.detail}`);
   }
 }
 
