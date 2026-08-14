@@ -1,7 +1,7 @@
 /*
  * SITE-DEAD-INTERNAL-LINK 的回歸測試。
  *
- * 為什麼這條規則值得一個測試，而其他 56 條沒有：
+ * 為什麼這條規則值得一個測試，而絕大多數規則沒有：
  * 它曾經在採 clean URL 的靜態主機（Cloudflare Pages、Netlify、GitHub Pages）
  * 上誤判率 67%——連結寫 /gallery、輸出檔是 gallery.html，永遠對不上。
  * 而它是 **error** 級。一條 error 整批誤判，使用者會開始不相信整份報告。

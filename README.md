@@ -69,19 +69,15 @@ node skills/seo-aeo-audit/scripts/seo-check.mjs --dir ./dist --site https://exam
 ### 跑測試
 
 ```bash
-node --test skills/seo-aeo-audit/test/*.test.mjs
+node skills/seo-aeo-audit/test/dead-link.test.mjs
+node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 ```
 
-用 Node 內建的 test runner，不需要安裝任何東西。**注意要給 glob，不要只給目錄**
-——`node --test <目錄>` 在 Node 24 實測會直接失敗（兩支測試各自單獨跑都是通過的），
-症狀看起來像測試壞了，其實是呼叫方式。
+零相依、直接跑，輸出是給人看的（每個情境印出在測什麼）。
 
-若你的 Node 版本不支援 glob，就逐檔列出：
-
-```bash
-node --test skills/seo-aeo-audit/test/dead-link.test.mjs \
-            skills/seo-aeo-audit/test/bilingual-concat.test.mjs
-```
+也可以用 Node 內建的 test runner 拿彙總數字（`node --test <檔案>`），
+但**別給目錄**——`node --test <目錄>` 在 Node 24 實測會直接失敗，
+而兩支測試各自單獨跑都是通過的。症狀看起來像測試壞了，其實是呼叫方式。
 
 ---
 
