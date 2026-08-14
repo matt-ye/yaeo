@@ -321,10 +321,40 @@ function auditPage(rawHtml, page) {
     add(placeholders.length ? 'info' : 'warn', 'L2-THIN-CONTENT', `扣掉 nav/header/footer 後正文僅 ${mainText.length} 字元${placeholders.length ? '（已由 L2-CLIENT-RENDERED 說明原因）' : ''}`);
   }
 
-  // 雙語同頁的黏連字串：中文緊接英文，爬蟲會讀成一團
+  /* 雙語同頁的黏連字串：中文緊接英文，爬蟲會讀成一團。
+     只數這一個數字的問題是**它把兩種修法完全不同的狀況混在一起**：
+
+       ① <x lang="zh-TW">頁</x><y lang="en">Home</y>
+          相鄰、兩邊都宣告語言、而且語言不同 → 同一份內容的兩個版本同時在 DOM 裡。
+          這是**架構問題**，根治要改成獨立語言 URL。
+
+       ② <span lang="zh-TW">未翻譯的標題</span><time>Jul 5, 2026</time>
+          只有一邊宣告語言 → 英文頁上還沒翻譯的內容退回中文。
+          這是**內容進度**，翻完自然消失，不需要改架構。
+
+     實測一個做到一半的 i18n 網站：英文列表頁被報 27 處，全部是 ②；
+     而同站 36 個未遷移頁的是 ①。同一個數字、兩種完全不同的待辦。
+
+     ⚠ 判準**不能靠標記**。試過兩種都不行：
+       · 「有沒有 lang 屬性」——常見雙語元件（如 T.astro）兩半都帶 lang，
+         會把 ① 這種真正該修的一起消掉
+       · 「兩邊都宣告且語言不同」——漏掉用 class="zh-only"／"en-only"
+         而不帶 lang 的手刻頁，那些也是 ①
+
+     可靠的訊號是**內容本身**：相鄰兩個元素，前者主要是中日韓、後者主要是拉丁
+     ——那就是同一份內容的兩個語言版本並排。與標記方式完全無關。 */
   const concat = [...stripTags(dom).matchAll(/[㐀-鿿][A-Z][a-z]{2,}/g)];
   if (concat.length >= 3) {
-    add('info', 'L2-BILINGUAL-CONCAT', `${concat.length} 處中英黏連（例：「${concat[0][0]}…」）—— 同頁雙語 DOM 會讓爬蟲讀到混雜字串；根治要改成獨立語言 URL`, concat.length);
+    const cjkN = (s) => (s.match(/[㐀-鿿]/g) ?? []).length;
+    const latN = (s) => (s.match(/[A-Za-z]/g) ?? []).length;
+    const dualPairs = [...dom.matchAll(
+      /<(\w+)\b[^>]*>([^<]{2,})<\/\1>\s*<(\w+)\b[^>]*>([^<]{2,})<\/\3>/g,
+    )].filter((m) => cjkN(m[2]) > latN(m[2]) && latN(m[4]) > cjkN(m[4])).length;
+
+    const kind = dualPairs === 0
+      ? '——**沒有偵測到雙語並存的元素對**，多半是英文頁上還沒翻譯的內容退回中文；翻完就會消失，不必改架構'
+      : `——其中偵測到 ${dualPairs} 組雙語並存的元素對（同一份內容的中英兩版同時在 DOM 裡），根治要改成獨立語言 URL`;
+    add('info', 'L2-BILINGUAL-CONCAT', `${concat.length} 處中英黏連（例：「${concat[0][0]}…」）${kind}`, concat.length);
   }
 
   // 圖片 alt
