@@ -113,8 +113,8 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 | `SITE-ROBOTS-MISSING` / `SITE-SITEMAP-MISSING` | 兩個最基本的站層級檔案 |
 | `SITE-TITLE-DUP` | 多頁共用同一個 `<title>`＝告訴搜尋引擎這幾頁是重複內容 |
 
-> 其餘代碼（`L1-OG-*`、`L2-HEADING-SKIP`、`L2-NO-ARTICLE-TAG` 等）多為 warn/info，
-> 訊息本身已說明修法。完整清單見 `scripts/seo-check.mjs`。
+> 上面兩張表是**策展過的**：只列最常遇到、且修法需要判斷的。
+> **每一條規則的完整索引見〈完整規則索引〉**（本文件末段），不必去讀腳本。
 
 ### L3 AI 可見度
 
@@ -364,6 +364,86 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 - **內部連結判定**：`/` 開頭、相對路徑、與 `--site` 同網域的完整網址都算內部；
   未傳 `--site` 時，指向自站的完整網址會被誤判為外連——跨網域檢核時記得傳
 - 結構化資料只驗語法與必填欄位，**不驗 rich result 資格**——那要到 Google 官方網頁版工具，無 API
+
+## 完整規則索引
+
+**52 條規則**：L1 12／L2 23／L3 4／SITE 13。
+上面〈逐項怎麼修〉是策展過的常見項，這裡是全部。
+
+> 級別的意思：`error` = 幾乎必然有害且判準明確；`warn` = 該看但可能有正當理由；
+> `info` = 訊號弱或數量大，**不必清零**。調整級別前先讀〈調整門檻時的原則〉。
+
+### L1 技術基礎（12）
+
+| 代碼 | 級別 | 是什麼 |
+|---|---|---|
+| `L1-TITLE-MISSING` | error | `<title>` 缺失或為空 |
+| `L1-TITLE-LONG` | warn | 標題的**資訊核心**過長。量核心不量全長——SERP 從尾端截斷，站名後綴被截掉不損失資訊 |
+| `L1-TITLE-SHORT` | warn | 標題**全長**過短。這裡量全長，因為後綴會顯示出來，站名也是資訊 |
+| `L1-TITLE-REPEATED` | warn | 標題裡站名重複（頁面自己帶了一次、版型又補一次後綴）。長度檢查抓不到，各段分開看都不長 |
+| `L1-DESC-MISSING` | error | 缺 meta description |
+| `L1-DESC-LONG` | warn | description 超過門檻。**中文 90／英文 160**，依 CJK 佔比自動切換 |
+| `L1-CANONICAL-MISSING` | warn | 缺 canonical，有查詢參數的頁面尤其重要 |
+| `L1-LANG-MISSING` | warn | `<html>` 沒有 `lang` 屬性 |
+| `L1-LANG-CONTENT-MISMATCH` | warn／info | 宣告的語言與正文實際語言不符。warn＝整頁層級；info＝介面元件沒跟著換語言 |
+| `L1-NOINDEX` | info | 此頁標了 `noindex`——確認是刻意的 |
+| `L1-TWITTER-CARD-MISSING` | info | 缺 `twitter:card` |
+| `L1-TWITTER-SITE-MISSING` | info | 有 `twitter:creator` 但缺 `twitter:site`（作者帳號 vs 網站帳號，用途不同） |
+
+### L2 內容結構（23）
+
+| 代碼 | 級別 | 是什麼 |
+|---|---|---|
+| `L2-CLIENT-RENDERED` | error | 正文由瀏覽器端 fetch，爬蟲看到「載入中…」。**結構可能全過但沒有內容** |
+| `L2-CLIENT-RENDERED-PARTIAL` | warn | 正文量正常，但有局部動態區塊（留言、即時資料）。確認那一區需不需要被看到 |
+| `L2-CLIENT-RENDERED-NOINDEX` | info | 同上但該頁已 `noindex`——讓「刻意的」與「該修沒修」分開計數 |
+| `L2-FAKE-HEADING` | error | `<p class="section-heading">` 這類假標題。改標籤即可，**class 不動、視覺零變動** |
+| `L2-HEADING-EMPTY` | error | 標題元素是空的（文字由 JS 填）。預設文字寫回 HTML |
+| `L2-H1-MISSING` | error | 沒有 `h1` |
+| `L2-H1-MULTIPLE` | warn | 多個 `h1` |
+| `L2-HEADING-SKIP` | warn | 標題階層跳級。**根因常在缺的那一層，不是被報的那一層** |
+| `L2-TITLE-NOT-HEADING` | info | 卡片標題不是 heading。數量通常很大，**不要全改**——挑真的需要被讀成清單的地方 |
+| `L2-NO-INTERNAL-LINKS` | error | 孤島頁，讀者與爬蟲都走不到下一頁 |
+| `L2-FEW-INTERNAL-LINKS` | info | 不重複內部連結少於 3 個 |
+| `L2-IMG-ALT-MISSING` | error | 圖片沒有 `alt` 屬性 |
+| `L2-IMG-ALT-EMPTY` | info | `alt=""`——僅裝飾性圖片才該如此 |
+| `L2-JSONLD-INVALID` | error | JSON-LD 語法錯誤，整段會被忽略，等於沒寫 |
+| `L2-JSONLD-MISSING` | warn | 完全沒有結構化資料 |
+| `L2-ARTICLE-NO-DATE` | error | Article 型缺 `datePublished` |
+| `L2-ARTICLE-NO-AUTHOR` | warn | Article 型缺 `author`。**YMYL 的第一要件是「誰寫的」** |
+| `L2-FUTURE-DATE` | warn | `datePublished` 在未來＝頁面已上線卻宣稱未發佈。多半是把排程日當發佈日 |
+| `L2-NO-MODIFIED-DATE` | info | 有 `datePublished` 無 `dateModified`。⚠ **不要為了消這條而填假日期**——沒有機制與刻意留空是兩回事，見〈調整門檻時的原則〉 |
+| `L2-NO-TIME-TAG` | info | 日期只是純文字，沒有帶 `datetime` 的 `<time>` |
+| `L2-NO-ARTICLE-TAG` | info | 標為 Article 卻沒有 `<article>` 元素 |
+| `L2-BREADCRUMB-MISSING` | warn | 缺 BreadcrumbList JSON-LD。路徑越深收益越大（首頁不報） |
+| `L2-BILINGUAL-CONCAT` | info | 同頁雙語 DOM 造成的中英黏連。**訊息會分辨兩種狀況**：架構問題 vs 翻譯進度 |
+
+### L3 AI 可見度（4）
+
+| 代碼 | 級別 | 是什麼 |
+|---|---|---|
+| `L3-AI-SNIPPET-BLOCKED` | warn | 頁面設定使 AI 快照不可用 |
+| `L3-AI-SNIPPET-PARTIAL` | info | 快照資格受限 |
+| `L3-GEO-SIGNALS-NONE` | info | Article 完全沒有可引用訊號（統計、引述、出處） |
+| `L3-GEO-SIGNALS-THIN` | info | 可引用訊號偏少。**刻意不給目標數字**——論文沒有提供閾值 |
+
+### SITE 站層級（13）
+
+| 代碼 | 級別 | 是什麼 |
+|---|---|---|
+| `SITE-ROBOTS-MISSING` | error | 沒有 robots.txt |
+| `SITE-SITEMAP-MISSING` | error | 沒有 sitemap |
+| `SITE-SITEMAP-NOINDEX-CONFLICT` | warn | sitemap 邀請爬蟲來看一個標了 `noindex` 的頁——矛盾訊號 |
+| `SITE-TITLE-DUP` | error | 多頁共用同一個 `<title>`＝告訴搜尋引擎這幾頁是重複內容 |
+| `SITE-DESC-DUP` | warn | 多頁共用同一段 description |
+| `SITE-LANG-INCONSISTENT` | warn | 同一語言用了多種寫法（`zh-TW` 與 `zh-Hant` 混用）。**不是「站上有多種語言」**——那是雙語站該有的樣子 |
+| `SITE-DEAD-INTERNAL-LINK` | error | 站內連結指向不存在的路徑。**會處理 clean URL 與百分比編碼**（見〈已知限制〉） |
+| `SITE-RSS-MISSING` | warn | 沒有 RSS feed——那是 LLM 抓內容的常用管道 |
+| `SITE-LLMSTXT-MISSING` | info | 沒有 `llms.txt`。**證據弱**：尚無搜尋引擎官方表態支持 |
+| `SITE-AI-POLICY` | info | robots.txt 對 AI 爬蟲的分流現況（擋訓練／開放檢索各幾支） |
+| `SITE-AI-CRAWLER-UNSPECIFIED` | info | 有 AI 爬蟲未被明確允許或拒絕 |
+| `SITE-AI-RETRIEVAL-BLOCKED` | error | 擋掉了**檢索型**爬蟲——那會讓 AI 回答時無法引用本站 |
+| `SITE-CLAUDE-USER-BLOCKED` | error | robots.txt 擋掉 `Claude-User`。⚠ Anthropic 是唯一會遵守這條的，擋了會讓使用者貼本站網址請 Claude 讀取時**真的失敗** |
 
 ## 出處
 
