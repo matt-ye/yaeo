@@ -20,6 +20,16 @@
       "note": "PDF。內容雜湊每次下載都可能因產生時間而不同，所以比對檔案大小與 Last-Modified。"
     },
     {
+      "id": "material-symbols-ligature",
+      "name": "Google Fonts：Material Symbols 的 ligature 機制",
+      "version": null,
+      "url": "https://developers.google.com/fonts/docs/material_symbols",
+      "usedBy": ["L2-ICON-LIGATURE-TEXT"],
+      "watch": "updated",
+      "quote": "The web browser automatically replaces the text ligature with the icon vector",
+      "note": "這條規則的依據只有『圖示名就是元素的文字內容』這個機制事實。補救做法（aria-hidden=\"true\"）是從業共識——Google 這份文件只講機制不講無障礙，W3C WAI 的裝飾圖片指引講的是 <img> 的空 alt，沒有涵蓋 ligature。訊息裡已標明證據等級。"
+    },
+    {
       "id": "geo-paper",
       "name": "GEO: Generative Engine Optimization (Aggarwal et al., KDD 2024)",
       "version": "arXiv 2311.09735",

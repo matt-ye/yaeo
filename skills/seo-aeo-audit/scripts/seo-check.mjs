@@ -346,6 +346,34 @@ function auditPage(rawHtml, page) {
 
      可靠的訊號是**內容本身**：相鄰兩個元素，前者主要是中日韓、後者主要是拉丁
      ——那就是同一份內容的兩個語言版本並排。與標記方式完全無關。 */
+  /* 圖示字型的 ligature 名稱會被當成正文讀走。
+     Material Symbols／Material Icons 這類字型，**圖示名就是元素的文字內容**——
+     Google 官方文件逐字寫著「你在 HTML 裡寫 arrow_forward」，瀏覽器再把它
+     替換成圖示向量。也就是說任何做文字抽取的一方（爬蟲、LLM、螢幕閱讀器）
+     讀到的都是 arrow_back、dark_mode 這些字。
+
+     實測一個用了 18 個圖示的頁面：正文抽取的**開頭第一句**是
+     「arrow_back One More Step AW#32 創投現場 translate EN dark_mode…」
+     ——LLM 讀這頁時最先看到的就是這串雜訊。
+
+     ⚠ 這與「字型有沒有載入」無關。字型沒載入是人眼看到英文單字（視覺問題）；
+     這條講的是**不管字型載不載入，那些字都在 HTML 裡**（抽取問題）。
+     兩者常被混為一談，但只有後者關 SEO／AEO 的事。
+
+     補救是給裝飾性圖示加 aria-hidden="true"，讓輔助技術與抽取器跳過。
+     ⚠ **這是從業共識，沒有官方出處**——Google Fonts 的文件只講機制不講無障礙，
+     W3C WAI 的裝飾圖片指引講的是 <img> 的空 alt，沒有涵蓋 ligature。
+     所以只報 info，且訊息裡標明證據等級。 */
+  const iconEls = [...dom.matchAll(
+    /<(\w+)\b([^>]*\bclass="[^"]*\bmaterial-(?:symbols|icons)[\w-]*[^"]*"[^>]*)>([^<]{2,40})<\/\1>/gi,
+  )];
+  const exposed = iconEls.filter((m) => !/\baria-hidden\s*=\s*["']true["']/i.test(m[2]));
+  if (exposed.length) {
+    add('info', 'L2-ICON-LIGATURE-TEXT',
+      `${exposed.length}／${iconEls.length} 個圖示字型元素沒有 aria-hidden（例：「${exposed[0][3].trim()}」）——ligature 的圖示名就是元素的文字內容，會被爬蟲與 LLM 當成正文讀走。補救（aria-hidden="true"）屬從業共識，無官方出處`,
+      exposed.length);
+  }
+
   const concat = [...stripTags(dom).matchAll(/[㐀-鿿][A-Z][a-z]{2,}/g)];
   if (concat.length >= 3) {
     const cjkN = (s) => (s.match(/[㐀-鿿]/g) ?? []).length;
