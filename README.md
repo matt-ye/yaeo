@@ -27,10 +27,20 @@ SEO → AEO → GEO → LLMO，縮寫每季都在增加。這個 repo 不打算�
 
 | 路徑 | 是什麼 |
 |---|---|
-| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ 57 條規則（L1 15／L2 25／L3 4／SITE 13） |
+| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ 57 個檢查點（L1 15／L2 25／L3 4／SITE 13） |
 | `skills/seo-aeo-audit/scripts/seo-check.mjs` | 零相依的靜態檢核器（Node，不需 npm install） |
 | `skills/seo-aeo-audit/scripts/psi-check.mjs` | PageSpeed Insights 包裝（需自己的 API key） |
+| `skills/seo-aeo-audit/test/` | 回歸測試。只有兩條規則有，理由見〈為什麼只有兩條規則有測試〉 |
 | `watch/` | 定期檢索：出處是否失效、爬蟲清單是否變動、生態是否有新縮寫 |
+
+> **「57」數的是檢查點，不是不重複的規則代碼。**
+> 檢查點＝腳本裡實際會報一次的地方（`add()` 呼叫處）；不重複的代碼是 **53**
+> （L1 12／L2 24／L3 4／SITE 13）——差別在於同一條規則可能有多個觸發點，
+> 例如標題過長與過短是兩個檢查點，量的東西也不同（過長量核心，因為站名後綴
+> 會被截掉；過短量全長，因為後綴會顯示、站名也是資訊）。
+>
+> 這個 repo 要求每個數字都查得到出處，那它自己的頭號數字更該寫明是怎麼數的。
+> 兩個數字都可以直接復驗：數 `add(` 的呼叫處，或數其中不重複的代碼字串。
 
 ## 四層架構
 
@@ -56,9 +66,26 @@ node skills/seo-aeo-audit/scripts/seo-check.mjs --dir ./dist --site https://exam
 在 Claude Code 裡則把 `skills/seo-aeo-audit/` 放進 `~/.claude/skills/`，
 之後說「檢查這個網站的 SEO」就會自動觸發。
 
+### 跑測試
+
+```bash
+node --test skills/seo-aeo-audit/test/*.test.mjs
+```
+
+用 Node 內建的 test runner，不需要安裝任何東西。**注意要給 glob，不要只給目錄**
+——`node --test <目錄>` 在 Node 24 實測會直接失敗（兩支測試各自單獨跑都是通過的），
+症狀看起來像測試壞了，其實是呼叫方式。
+
+若你的 Node 版本不支援 glob，就逐檔列出：
+
+```bash
+node --test skills/seo-aeo-audit/test/dead-link.test.mjs \
+            skills/seo-aeo-audit/test/bilingual-concat.test.mjs
+```
+
 ---
 
-## 三個設計立場
+## 四個設計立場
 
 **① 檢核建置產物，不是原始碼。**
 兩者可以完全不同。實例：某頁的經歷描述用字串插值輸出，HTML 裡是
@@ -71,6 +98,47 @@ node skills/seo-aeo-audit/scripts/seo-check.mjs --dir ./dist --site https://exam
 **③ 弱訊號不寫成 error。**
 `L3-GEO-*` 只報 `info`，而且不給目標數字——論文說的是「加了會提升可見度」，
 不是「沒加就是錯」，也沒有提供閾值。
+
+**④ 誤判要回頭修腳本，不是把門檻調寬到不再觸發。**
+`SITE-DEAD-INTERNAL-LINK` 曾在採 clean URL 的靜態主機上誤判率 67%：連結寫
+`/gallery`、輸出檔是 `gallery.html`，永遠對不上。Cloudflare Pages、Netlify、
+GitHub Pages **全部**預設支援 clean URL——而它是 **error** 級。
+**一條 error 整批誤判比漏報更糟**：漏報只是少看到一個問題，整批誤判會讓使用者
+不再相信整份報告。
+
+它潛伏那麼久的原因值得記下來：開發時用的網站是 directory 輸出
+（`/a/b/index.html`），**那是唯一它本來就正確的模式**。
+在唯一測過的環境裡，它從第一版起就是對的。
+
+> **一條規則能潛伏多久，取決於你只在一種環境測它。**
+
+改法是把方向倒過來：原本猜「連結該長什麼樣」（把 `/gallery` 正規化再比對），
+改成**先算出每個輸出檔實際到得了的所有網址形式**，再看連結有沒有命中。
+前者要窮舉使用者的寫法，後者只要窮舉主機的行為——後者的集合小得多，
+而且是查得到的事實。
+
+### 為什麼只有兩條規則有測試
+
+修「誤判」有一個假解法，**長得和真解法一模一樣**：把規則放寬到不再觸發，
+報告上看起來就像修好了，誤判確實消失了。
+
+所以這兩個測試都在每個情境裡**埋一條真的該報的**，斷言「只報這一條」——
+少報和多報都會失敗。判斷哪條規則值得寫測試，看的不是它多複雜，是
+**它錯的時候會不會讓人不再相信整份報告**。
+
+第二條是 `L2-BILINGUAL-CONCAT`。它報的數字一直是對的，問題在那個數字
+**把兩種修法完全不同的狀況混在一起**：
+
+| 狀況 | 性質 | 怎麼辦 |
+|---|---|---|
+| 同一份內容的中英兩版同時在 DOM 裡 | 架構 | 改成獨立語言 URL |
+| 英文頁上還沒翻譯的內容退回中文 | 內容進度 | 翻完自然消失 |
+
+加判準時試錯兩次，兩次都是**靠標記判斷**——「有沒有 `lang` 屬性」會把第一種
+一起消掉（常見雙語元件兩半都帶 `lang`）；「兩邊都宣告且語言不同」會漏掉用
+`class="zh-only"` 而不帶 `lang` 的手刻頁。最後改成**靠內容**：相鄰兩元素，
+前者主要中日韓、後者主要拉丁。所以那個測試的重點不是數字對不對，
+是**三種不同的標記方式都要判對**。
 
 ---
 
