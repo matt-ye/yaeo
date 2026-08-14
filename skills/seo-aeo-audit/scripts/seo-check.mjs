@@ -259,7 +259,10 @@ function auditPage(rawHtml, page) {
   // 判準組合拳：正文量少 ＋ 有「載入中」佔位 ＝ 高信心（單看字數會誤傷本來就短的頁）
   const chrome = /<(nav|header|footer|aside)\b[\s\S]*?<\/\1>/gi;
   const bodyM = dom.match(/<body\b[^>]*>([\s\S]*)<\/body>/i);
-  const mainText = stripTags((bodyM ? bodyM[1] : dom).replace(chrome, ''));
+  /* mainDom 保留標籤（L1-LANG-CONTENT-MISMATCH 要逐個文字節點看），
+     mainText 是它剝完標籤的版本。兩者都已去掉 nav/header/footer/aside。 */
+  const mainDom = (bodyM ? bodyM[1] : dom).replace(chrome, '');
+  const mainText = stripTags(mainDom);
   /* 佔位語要抓「構詞法」而不是「字串清單」。
      中文的載入提示是「動詞＋（受詞）＋中」：載入中／載入資料中／載入留言中／
      讀取設定中……列舉清單只能命中想得到的組合。實際踩過的雷是「載入留言中」
@@ -355,6 +358,70 @@ function auditPage(rawHtml, page) {
       ? '——**沒有偵測到雙語並存的元素對**，多半是英文頁上還沒翻譯的內容退回中文；翻完就會消失，不必改架構'
       : `——其中偵測到 ${dualPairs} 組雙語並存的元素對（同一份內容的中英兩版同時在 DOM 裡），根治要改成獨立語言 URL`;
     add('info', 'L2-BILINGUAL-CONCAT', `${concat.length} 處中英黏連（例：「${concat[0][0]}…」）${kind}`, concat.length);
+  }
+
+  /* 宣告的語言與正文實際的語言不符。
+     `L1-LANG-MISSING` 只問「有沒有宣告」，`SITE-LANG-INCONSISTENT` 只比對
+     「同一語言有沒有多種寫法」——兩條都不看正文。所以一個 <html lang="en">
+     卻滿頁中文的頁面，先前整份報告一個字都不會說。
+
+     實際案例：i18n 遷移時，下拉選單的選項用 data-* 屬性存兩種語言、靠執行期
+     JS 抽換，build 產物裡的文字仍然是中文。使用者看到的是對的（腳本會換），
+     爬蟲拿到的是一個宣告英文卻塞滿中文選項的頁面。**不看正文就永遠報不出來。**
+
+     ⚠ 判準必須不對稱，這是這條規則最重要的設計決定：
+       · 宣告拉丁語系（en…）卻出現整塊中日韓文字 → 幾乎不會是巧合，可以報
+       · 宣告中日韓卻出現整塊拉丁字母 → **不能報**。中文頁出現品牌名、程式碼、
+         縮寫是常態（「用 React 寫」「canonical 源頭」），反向套用會整批誤判
+
+     所以下面兩個方向分開處理，而不是用同一個對稱的比例門檻。
+     這與 title/description 門檻分中英兩套是同一個理由：**中文與英文的基準
+     本來就不對稱，用同一把尺量會錯。** */
+  if (lang && mainText.length >= 80) {
+    const primary = lang.toLowerCase().split('-')[0];
+    const declaredIsCJK = ['zh', 'ja', 'ko'].includes(primary);
+    const cjkN2 = (mainText.match(/[㐀-鿿]/g) ?? []).length;
+    const latN2 = (mainText.match(/[A-Za-z]/g) ?? []).length;
+
+    if (!declaredIsCJK && cjkN2 > latN2) {
+      /* 整頁層級：宣告拉丁語系，中日韓字元卻比拉丁字母還多。
+         這不是零星未翻譯，是宣告錯了或整頁根本沒翻。 */
+      add('warn', 'L1-LANG-CONTENT-MISMATCH',
+        `<html lang="${lang}"> 但正文的中日韓字元（${cjkN2}）多於拉丁字母（${latN2}）——宣告的語言與實際內容不符`);
+    } else if (!declaredIsCJK) {
+      /* 整頁沒問題，但可能有零星沒跟著換語言的東西。
+         只數「整塊都是中日韓」的文字節點——中英並列（「類型學 Typology」）不算，
+         那本來就雙語。長度門檻 2 是為了略過語言切換鈕的「中」這種單字。
+
+         ⚠ 這裡**不能只給一個總數**，那會犯下與 L2-BILINGUAL-CONCAT 同樣的錯：
+         把兩種修法完全不同的狀況混在一起。實測一個雙語站的英文演講列表頁，
+         純中日韓的節點有 167 個，但依包住它的標籤拆開之後：
+
+           <a>      163 個  晶盛科技股份有限公司、東吳大學英文學系 → **專有名詞，不該翻**
+           <option>   4 個  日期（最新）、人次（最多）             → **介面沒跟著換語言，該修**
+
+         所以只報介面元件。內容區塊的中日韓文字絕大多數是機構名、人名、活動名，
+         報出來會是 163 比 4 的雜訊——而**噪音比漏報更危險**：
+         一份充滿「其實不用改」的報告，讀者會連真的那 4 個一起忽略。
+         整頁層級真的不對勁的情況，上面那條 warn 已經涵蓋。 */
+      const UI_TAGS = new Set(['option', 'button', 'label', 'th', 'summary', 'legend', 'optgroup']);
+      const uiForeign = [...mainDom.matchAll(/<(\w+)\b[^>]*>([^<]{2,})</g)]
+        .map((m) => ({ tag: m[1].toLowerCase(), text: decodeEntities(m[2]).trim() }))
+        .filter((n) => UI_TAGS.has(n.tag) && n.text.length >= 2
+          && /[㐀-鿿]/.test(n.text) && !/[A-Za-z]/.test(n.text));
+      if (uiForeign.length) {
+        add('info', 'L1-LANG-CONTENT-MISMATCH',
+          `${uiForeign.length} 個介面元件是純中日韓文字，但本頁宣告 lang="${lang}"`
+          + `（例：<${uiForeign[0].tag}>「${uiForeign[0].text.slice(0, 20)}」）`
+          + '——介面文字沒有跟著網址換語言。內容裡的專有名詞不算在內',
+          uiForeign.length);
+      }
+    } else if (cjkN2 < 10 && latN2 > 200) {
+      /* 宣告中日韓、正文卻幾乎沒有中日韓字元。只在這種極端情況報，
+         理由見上面的不對稱說明——這個方向的誤判成本高得多。 */
+      add('warn', 'L1-LANG-CONTENT-MISMATCH',
+        `<html lang="${lang}"> 但正文只有 ${cjkN2} 個中日韓字元（拉丁字母 ${latN2}）——宣告的語言與實際內容不符`);
+    }
   }
 
   // 圖片 alt
