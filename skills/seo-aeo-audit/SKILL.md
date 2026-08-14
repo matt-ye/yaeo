@@ -108,7 +108,7 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 | `L2-JSONLD-INVALID` | JSON-LD 語法錯誤——整段會被搜尋引擎忽略，等於沒寫 |
 | `L2-ARTICLE-NO-AUTHOR` | Article 補 `author`。**YMYL 的第一要件是「誰寫的」** |
 | `L2-FUTURE-DATE` | `datePublished` 在未來＝頁面已上線卻宣稱未發佈。多半是把「排程日」當發佈日 |
-| `SITE-DEAD-INTERNAL-LINK` | 站內連結指向不存在的路徑 |
+| `SITE-DEAD-INTERNAL-LINK` | 站內連結指向不存在的路徑。**會處理 clean URL**——連結寫 `/gallery`、輸出檔是 `gallery.html` 不算死連結（見下） |
 | `SITE-SITEMAP-NOINDEX-CONFLICT` | sitemap 邀請爬蟲來看一個標了 `noindex` 的頁——矛盾訊號 |
 | `SITE-ROBOTS-MISSING` / `SITE-SITEMAP-MISSING` | 兩個最基本的站層級檔案 |
 | `SITE-TITLE-DUP` | 多頁共用同一個 `<title>`＝告訴搜尋引擎這幾頁是重複內容 |
@@ -291,6 +291,30 @@ noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode �
 - 不檢核實際排名與收錄狀態（走 Google Search Console API；2026-06 起含 AI Overview 曝光數據）
 - **外部連結是否還活著不在檢核範圍**——`SITE-DEAD-INTERNAL-LINK` 只驗站內路徑。
   外連要另外跑連結健檢，判準見 `PROMPT_連結驗證與來源查核SOP.md`（非 2xx ≠ 失效）
+
+  > ⚠ **這條規則修過一次大誤判（2026-08-14），值得當成教材。**
+  > 第一版只認「目錄形式」的輸出（`/a/b/index.html` → `/a/b/`），
+  > 於是在採 clean URL 的靜態主機上——Cloudflare Pages、Netlify、GitHub Pages
+  > 都是——連結寫 `/gallery`、輸出檔是 `gallery.html`，**每一條都被報成死連結**。
+  > 實測誤判率 67%（3 條裡 2 條是誤判），而且它是 **error** 級。
+  >
+  > 它潛伏很久，是因為開發時用的網站剛好是目錄輸出，那個模式從第一版就對。
+  > **測試涵蓋的輸出模式，比規則本身寫得多漂亮更重要。**
+  >
+  > 改法是把方向倒過來：不要猜連結該長什麼樣，而是先算出每個輸出檔
+  > 實際到得了的所有網址形式，再看連結有沒有命中。回歸測試在
+  > `test/dead-link.test.mjs`，三種輸出模式各埋一條真死連結——
+  > 因為修誤判最容易的假解法，就是把規則放寬到不再觸發。
+
+## 測試
+
+```bash
+node skills/seo-aeo-audit/test/dead-link.test.mjs
+```
+
+零相依，直接跑。目前只涵蓋 `SITE-DEAD-INTERNAL-LINK`——
+**不是因為別條不重要，是因為只有這條出過整批誤判。**
+哪條規則值得寫測試，看的是它錯的時候會不會讓人不再相信整份報告。
 - **效能診斷要「先看總量，再看時序」**。
   第一個該問的是「**這頁到底多大**」（`total-byte-weight`），不是「哪個環節慢」。
   ⚠ **PSI 的「最慢請求」不能拿來排除網路因素**——`network-requests` 記的是

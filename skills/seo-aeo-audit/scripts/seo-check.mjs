@@ -563,16 +563,56 @@ function auditSite(pages, root) {
     }
   }
 
-  /* 內部連結指向不存在的頁面。這裡只驗站內相對路徑，外連交給專門的連結健檢。 */
-  const existing = new Set(pages.map((p) => '/' + p.page.replace(/index\.html$/, '')));
+  /* 內部連結指向不存在的頁面。這裡只驗站內絕對路徑，外連交給專門的連結健檢。
+
+     ⚠ 這條規則的第一版在採 clean URL 的靜態主機上會**全面誤判**。
+     成因是「輸出檔名」與「使用者看到的網址」不是同一件事，而兩者的對應
+     取決於主機：
+
+       dist/gallery.html        Cloudflare Pages／Netlify／GitHub Pages
+                                都讓 /gallery 直接到得了
+       dist/gallery/index.html  /gallery/ 與 /gallery 都到得了
+
+     第一版只認目錄形式，於是在 file 輸出的站上，每一條寫成 /gallery 的
+     連結都會被報成死連結——一條 error 級規則整批誤判，比漏報更糟：
+     使用者會開始不相信整份報告。
+
+     改法是把方向倒過來。不要「猜連結該長什麼樣」，而是**先算出每個輸出檔
+     實際到得了的所有網址形式**，再看連結有沒有命中其中之一。 */
+  const resolvable = new Set();
+  for (const { page } of pages) {
+    const abs = '/' + page;                                   // /gallery.html｜/a/b/index.html
+    resolvable.add(abs);
+    if (abs.endsWith('/index.html')) {
+      const dir = abs.slice(0, -'index.html'.length);         // /a/b/
+      resolvable.add(dir);
+      resolvable.add(dir.replace(/\/$/, '') || '/');          // /a/b（無尾斜線）
+    } else if (abs.endsWith('.html')) {
+      const bare = abs.slice(0, -'.html'.length);             // /gallery
+      resolvable.add(bare);
+      resolvable.add(bare + '/');                             // 有些主機會導向這個
+    }
+  }
+
   const dead = new Map();
   for (const { page, meta } of pages) {
     for (const href of meta.internalHrefs ?? []) {
       const clean = href.split('#')[0].split('?')[0];
       if (!clean.startsWith('/')) continue;              // 相對路徑無法在此可靠還原
-      const norm = clean.endsWith('/') ? clean : `${clean}/`;
-      if (existing.has(norm)) continue;
-      if (existsSync(join(root, clean.replace(/^\//, '')))) continue; // 靜態檔（pdf、圖片等）
+      const bare = clean.replace(/\/+$/, '') || '/';
+      const forms = [
+        clean,
+        bare,
+        bare === '/' ? '/' : `${bare}/`,
+        bare === '/' ? '/index.html' : `${bare}.html`,
+        `${bare === '/' ? '' : bare}/index.html`,
+      ];
+      if (forms.some((f) => resolvable.has(f))) continue;
+      /* 靜態檔（pdf、圖片等）。網址可能是百分比編碼而檔名不是——
+         解碼失敗就退回原字串，不要讓一個壞掉的網址炸掉整份檢核。 */
+      let fsPath = clean.replace(/^\//, '');
+      try { fsPath = decodeURIComponent(fsPath); } catch { /* 保留原樣 */ }
+      if (existsSync(join(root, fsPath))) continue;
       dead.set(clean, (dead.get(clean) ?? 0) + 1);
       if (!dead.__firstPage) dead.__firstPage = page;
     }
