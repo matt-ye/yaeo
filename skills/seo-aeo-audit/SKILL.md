@@ -367,8 +367,13 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 
 ## 完整規則索引
 
-**52 條規則**：L1 12／L2 23／L3 4／SITE 13。
+**56 條規則**：L1 13／L2 26／L3 4／SITE 13。
 上面〈逐項怎麼修〉是策展過的常見項，這裡是全部。
+
+> 這份索引由 `test/rule-index.test.mjs` 守著：新增規則卻沒補進來，測試會失敗並
+> 指名漏了哪幾條。**建立這份索引時漏了 4 條就是因為當時沒有這個守衛**——
+> 抽取腳本只認 `add('warn', 'CODE'`，於是把所有「嚴重度隨條件變動」的規則
+> （`add(isNoindex ? 'info' : 'warn', 'CODE'`）整類漏掉，而驗證腳本共用同一個假設。
 
 > 級別的意思：`error` = 幾乎必然有害且判準明確；`warn` = 該看但可能有正當理由；
 > `info` = 訊號弱或數量大，**不必清零**。調整級別前先讀〈調整門檻時的原則〉。
@@ -383,6 +388,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | `L1-TITLE-REPEATED` | warn | 標題裡站名重複（頁面自己帶了一次、版型又補一次後綴）。長度檢查抓不到，各段分開看都不長 |
 | `L1-DESC-MISSING` | error | 缺 meta description |
 | `L1-DESC-LONG` | warn | description 超過門檻。**中文 90／英文 160**，依 CJK 佔比自動切換 |
+| `L1-DESC-SHORT` | warn／info | description 過短，說服力不足（它決定 SERP 點擊率）。noindex 頁降 info |
 | `L1-CANONICAL-MISSING` | warn | 缺 canonical，有查詢參數的頁面尤其重要 |
 | `L1-LANG-MISSING` | warn | `<html>` 沒有 `lang` 屬性 |
 | `L1-LANG-CONTENT-MISMATCH` | warn／info | 宣告的語言與正文實際語言不符。**只計算沒有用 `lang` 標記的外語**——已標記代表作者知道也標對了，那不是缺陷。warn＝未標記的外語明顯多於本文語言；info＝介面元件（`<option>`／`<button>` 等）沒跟著換語言 |
@@ -397,6 +403,9 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | `L2-CLIENT-RENDERED` | error | 正文由瀏覽器端 fetch，爬蟲看到「載入中…」。**結構可能全過但沒有內容** |
 | `L2-CLIENT-RENDERED-PARTIAL` | warn | 正文量正常，但有局部動態區塊（留言、即時資料）。確認那一區需不需要被看到 |
 | `L2-CLIENT-RENDERED-NOINDEX` | info | 同上但該頁已 `noindex`——讓「刻意的」與「該修沒修」分開計數 |
+| `L2-THIN-CONTENT` | warn／info | 扣掉 nav/header/footer 後正文過少。有載入佔位（原因已由 `CLIENT-RENDERED` 說明）或該頁 `noindex`（如 404，本來就該短）時降 info |
+| `L2-TEMPLATE-NOT-RENDERED` | error／info | 模板佔位元素是空的。**比字數更直接的證據**——176 字的空殼與 176 字的短文，字數上完全一樣。noindex 頁降 info |
+| `L2-ICON-LIGATURE-TEXT` | info | 圖示字型（Material Symbols 等）的 ligature 名稱就是元素的文字內容，會被爬蟲與 LLM 當成正文讀走（`arrow_back dark_mode…`）。⚠ 補救方式（`aria-hidden="true"`）**屬從業共識，無官方出處**，所以只報 info |
 | `L2-FAKE-HEADING` | error | `<p class="section-heading">` 這類假標題。改標籤即可，**class 不動、視覺零變動** |
 | `L2-HEADING-EMPTY` | error | 標題元素是空的（文字由 JS 填）。預設文字寫回 HTML |
 | `L2-H1-MISSING` | error | 沒有 `h1` |

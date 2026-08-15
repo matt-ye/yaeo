@@ -45,7 +45,7 @@ so applying it in reverse would misfire across the board.
 
 | Path | What it is |
 |---|---|
-| `skills/seo-aeo-audit/` | Claude Code skill: four layers of checks, **52 rules** (L1 12 / L2 23 / L3 4 / SITE 13) |
+| `skills/seo-aeo-audit/` | Claude Code skill: four layers of checks, **56 rules** (L1 13 / L2 26 / L3 4 / SITE 13) |
 | `skills/seo-aeo-audit/scripts/seo-check.mjs` | Zero-dependency static checker (Node, no `npm install`) |
 | `skills/seo-aeo-audit/scripts/psi-check.mjs` | PageSpeed Insights wrapper (bring your own API key) |
 | `skills/seo-aeo-audit/test/` | Regression tests — only for rules whose **criteria have gone wrong before**; see "Which rules deserve a test" |
@@ -55,9 +55,14 @@ so applying it in reverse would misfire across the board.
 > — code, severity, and what it means, with nothing left out. You shouldn't have to read
 > a 45 KB script to find out what the rules are.
 >
-> "52" counts distinct rule codes, and you can re-derive it: take the second argument of
-> every `add()` call in the script and count the unique values. This repo asks every number
-> to have a source; that applies to its own headline number too.
+> "56" counts distinct rule codes, and it is **guarded by `test/rule-index.test.mjs`** —
+> add a rule without listing it and the test fails, naming exactly what is missing.
+>
+> That guard was added after the fact. The first version of the index claimed to be complete
+> and was missing four rules: the extraction script only recognised `add('warn', 'CODE'`,
+> so it silently skipped every rule whose **severity varies by condition**
+> (`add(isNoindex ? 'info' : 'warn', 'CODE'`) — and the verification script shared the same
+> assumption. **Verifying with a tool that has the same blind spot is not verification.**
 
 ## The four layers
 
@@ -89,6 +94,7 @@ saying "check this site's SEO" triggers it.
 node skills/seo-aeo-audit/test/dead-link.test.mjs
 node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 node skills/seo-aeo-audit/test/lang-content-mismatch.test.mjs
+node skills/seo-aeo-audit/test/rule-index.test.mjs
 ```
 
 Zero dependencies, run them directly; the output is written for humans
