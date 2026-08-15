@@ -408,14 +408,70 @@ function auditPage(rawHtml, page) {
   if (lang && mainText.length >= 80) {
     const primary = lang.toLowerCase().split('-')[0];
     const declaredIsCJK = ['zh', 'ja', 'ko'].includes(primary);
-    const cjkN2 = (mainText.match(/[㐀-鿿]/g) ?? []).length;
-    const latN2 = (mainText.match(/[A-Za-z]/g) ?? []).length;
 
-    if (!declaredIsCJK && cjkN2 > latN2) {
-      /* 整頁層級：宣告拉丁語系，中日韓字元卻比拉丁字母還多。
-         這不是零星未翻譯，是宣告錯了或整頁根本沒翻。 */
+    /* 走一遍標籤、維護 lang 作用域堆疊，把中日韓字元分成「已宣告」與「未宣告」。
+       為什麼不能用 stripTags() 之後直接數（這是第一版的做法，錯的）：
+       剝完標籤之後，<span lang="zh-TW">未翻譯的標題</span> 和一段忘了標的中文
+       變成同一個東西，於是「作者標對了、只是還沒翻」被報成「宣告的語言錯了」
+       ——量到的現象是真的，歸因是錯的，而讀者會照著錯的歸因去修。
+
+       為什麼不用正則抓 <x lang="zh">…</x>：反向參照 </\1> 遇到同名巢狀會提早閉合。
+       作用域堆疊順便處理了 lang 的繼承——文字歸屬於最內層的宣告。 */
+    const LANG_VOID = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+    const langStack = [];
+    let markedCJK = 0, unmarkedCJK = 0, latN2 = 0;
+    const uiForeign = [];
+    const UI_TAGS = new Set(['option', 'button', 'label', 'th', 'summary', 'legend', 'optgroup']);
+    let openTag = null;   // 前一個開始標籤，用來判斷這段文字直接住在哪個元素裡
+
+    for (const tok of mainDom.split(/(<[^>]*>)/)) {
+      if (!tok) continue;
+      if (tok.startsWith('<')) {
+        if (tok.startsWith('<!') || tok.startsWith('<?')) continue;
+        const nm = tok.match(/^<(\/?)\s*([a-zA-Z][a-zA-Z0-9-]*)/);
+        if (!nm) continue;
+        const tag = nm[2].toLowerCase();
+        if (LANG_VOID.has(tag) || tok.endsWith('/>')) { openTag = null; continue; }
+        if (nm[1]) {
+          for (let i = langStack.length - 1; i >= 0; i--) {
+            if (langStack[i].tag === tag) { langStack.length = i; break; }
+          }
+          openTag = null;
+        } else {
+          const lm = tok.match(/\slang\s*=\s*["']([^"']+)["']/i);
+          if (lm) langStack.push({ tag, lang: lm[1].toLowerCase() });
+          openTag = { tag, hasLang: Boolean(lm) };
+        }
+        continue;
+      }
+      const text = decodeEntities(tok).trim();
+      latN2 += (tok.match(/[A-Za-z]/g) ?? []).length;
+      const cjk = (tok.match(/[㐀-鿿]/g) ?? []).length;
+      if (!cjk) continue;
+      const cur = langStack.length ? langStack[langStack.length - 1].lang : null;
+      if (cur && /^(zh|ja|ko)\b/.test(cur)) markedCJK += cjk;
+      else unmarkedCJK += cjk;
+
+      /* 介面元件：自己宣告了 lang 的跳過。語言選擇器 <option lang="zh">中文</option>
+         各語言用自己的文字才是對的寫法，報它就是誤判。 */
+      if (openTag && UI_TAGS.has(openTag.tag) && !openTag.hasLang
+          && text.length >= 2 && /[㐀-鿿]/.test(text) && !/[A-Za-z]/.test(text)) {
+        uiForeign.push({ tag: openTag.tag, text });
+      }
+    }
+    const cjkN2 = markedCJK + unmarkedCJK;
+
+    /* ⚠ 倍數 1.2 不是精確度，是**穩定性**。第一版用「勉強過半」，實際踩到：
+       某英文列表頁 1401 vs 1381（差 1.4%），翻十篇文章標題就從有到無。
+       一個 warn 級的結論不該由 1.4% 的差距決定——剛好過半的頁面本來就是
+       模稜兩可的，模稜兩可時保持安靜。 */
+    if (!declaredIsCJK && unmarkedCJK > latN2 * 1.2) {
+      /* 整頁層級：宣告拉丁語系，**未宣告**的中日韓字元卻明顯多於拉丁字母。
+         只看未宣告的——已宣告的代表作者知道那是外語也標對了，那不是缺陷。 */
       add('warn', 'L1-LANG-CONTENT-MISMATCH',
-        `<html lang="${lang}"> 但正文的中日韓字元（${cjkN2}）多於拉丁字母（${latN2}）——宣告的語言與實際內容不符`);
+        `<html lang="${lang}"> 但正文有 ${unmarkedCJK} 個未宣告語言的中日韓字元（拉丁字母 ${latN2}`
+        + (markedCJK ? `；另有 ${markedCJK} 個已標 lang，不計入` : '')
+        + '）——宣告的語言與實際內容不符');
     } else if (!declaredIsCJK) {
       /* 整頁沒問題，但可能有零星沒跟著換語言的東西。
          只數「整塊都是中日韓」的文字節點——中英並列（「類型學 Typology」）不算，
@@ -432,11 +488,8 @@ function auditPage(rawHtml, page) {
          報出來會是 163 比 4 的雜訊——而**噪音比漏報更危險**：
          一份充滿「其實不用改」的報告，讀者會連真的那 4 個一起忽略。
          整頁層級真的不對勁的情況，上面那條 warn 已經涵蓋。 */
-      const UI_TAGS = new Set(['option', 'button', 'label', 'th', 'summary', 'legend', 'optgroup']);
-      const uiForeign = [...mainDom.matchAll(/<(\w+)\b[^>]*>([^<]{2,})</g)]
-        .map((m) => ({ tag: m[1].toLowerCase(), text: decodeEntities(m[2]).trim() }))
-        .filter((n) => UI_TAGS.has(n.tag) && n.text.length >= 2
-          && /[㐀-鿿]/.test(n.text) && !/[A-Za-z]/.test(n.text));
+      /* uiForeign 在上面走標籤時就一併收集了：同一趟掃描，而且自己宣告 lang 的
+         元素已被排除（語言選擇器 <option lang="zh">中文</option> 是正確寫法）。 */
       if (uiForeign.length) {
         add('info', 'L1-LANG-CONTENT-MISMATCH',
           `${uiForeign.length} 個介面元件是純中日韓文字，但本頁宣告 lang="${lang}"`

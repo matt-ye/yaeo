@@ -385,7 +385,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | `L1-DESC-LONG` | warn | description 超過門檻。**中文 90／英文 160**，依 CJK 佔比自動切換 |
 | `L1-CANONICAL-MISSING` | warn | 缺 canonical，有查詢參數的頁面尤其重要 |
 | `L1-LANG-MISSING` | warn | `<html>` 沒有 `lang` 屬性 |
-| `L1-LANG-CONTENT-MISMATCH` | warn／info | 宣告的語言與正文實際語言不符。warn＝整頁層級；info＝介面元件沒跟著換語言 |
+| `L1-LANG-CONTENT-MISMATCH` | warn／info | 宣告的語言與正文實際語言不符。**只計算沒有用 `lang` 標記的外語**——已標記代表作者知道也標對了，那不是缺陷。warn＝未標記的外語明顯多於本文語言；info＝介面元件（`<option>`／`<button>` 等）沒跟著換語言 |
 | `L1-NOINDEX` | info | 此頁標了 `noindex`——確認是刻意的 |
 | `L1-TWITTER-CARD-MISSING` | info | 缺 `twitter:card` |
 | `L1-TWITTER-SITE-MISSING` | info | 有 `twitter:creator` 但缺 `twitter:site`（作者帳號 vs 網站帳號，用途不同） |
