@@ -321,7 +321,10 @@ function auditPage(rawHtml, page) {
      套英文的 300 字元門檻會誤判為「內容過少」。 */
   const thinLimit = cjkRatio(mainText) > 0.3 ? 150 : 300;
   if (mainText.length < thinLimit) {
-    add(placeholders.length ? 'info' : 'warn', 'L2-THIN-CONTENT', `扣掉 nav/header/footer 後正文僅 ${mainText.length} 字元${placeholders.length ? '（已由 L2-CLIENT-RENDERED 說明原因）' : ''}`);
+    /* noindex 的頁面降為 info：它不進索引，「內容太少」對搜尋結果沒有影響。
+       錯誤頁（404）是最典型的例子——它**本來就該短**，用內容頁的標準量它是錯的。
+       這與 L1-DESC-SHORT、L2-TEMPLATE-NOT-RENDERED 的處理一致。 */
+    add(placeholders.length || isNoindex ? 'info' : 'warn', 'L2-THIN-CONTENT', `扣掉 nav/header/footer 後正文僅 ${mainText.length} 字元${placeholders.length ? '（已由 L2-CLIENT-RENDERED 說明原因）' : isNoindex ? '——本頁已 noindex，不影響搜尋結果' : ''}`);
   }
 
   /* 雙語同頁的黏連字串：中文緊接英文，爬蟲會讀成一團。
@@ -569,7 +572,9 @@ function auditPage(rawHtml, page) {
      Google 的結構化資料文件也只把 BreadcrumbList 用在有上層路徑的頁面。
      語言前綴的首頁（/en/）同理。 */
   const isHome = /^(?:[a-z]{2}(?:-[A-Za-z]{2,4})?\/)?index\.html$/i.test(page);
-  if (!types.has('BreadcrumbList') && !isHome) add('warn', 'L2-BREADCRUMB-MISSING', '缺 BreadcrumbList（路徑越深越該有）');
+  /* 麵包屑是「這頁在網站層級裡的位置」。首頁沒有上層，noindex 的頁面（錯誤頁、
+     未公開的工具頁）不進索引也就沒有層級可言——兩者都不該報。 */
+  if (!types.has('BreadcrumbList') && !isHome && !isNoindex) add('warn', 'L2-BREADCRUMB-MISSING', '缺 BreadcrumbList（路徑越深越該有）');
   const articleish = ['Article', 'BlogPosting', 'NewsArticle', 'TechArticle'].some((t) => types.has(t));
   if (articleish && !hasDatePublished) add('error', 'L2-ARTICLE-NO-DATE', 'Article 型 JSON-LD 缺 datePublished');
   /* 更新日期是新鮮度訊號。只有 datePublished 而沒有 dateModified，
