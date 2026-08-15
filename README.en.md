@@ -9,6 +9,12 @@ SEO → AEO → GEO → LLMO — a new acronym every quarter. This repo doesn't 
 It does a single thing: **turn "how visible a site is to search engines and AI engines"
 into something you can check rule by rule, where every rule has a source you can look up.**
 
+> Search Engine Optimization (**SEO**), Answer Engine Optimization (**AEO**),
+> Generative Engine Optimization (**GEO**) and Large Language Model Optimization (**LLMO**)
+> are four names for different facets of the same question: **can the machine see your
+> content, understand it, and cite it.** The only thing that changes is which machine —
+> a search engine, an answer engine, or a language model.
+
 ---
 
 ## Why another one

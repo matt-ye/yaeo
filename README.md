@@ -9,6 +9,11 @@ SEO → AEO → GEO → LLMO，縮寫每季都在增加。這個 repo 不打算�
 它只做一件事：**把「網站對搜尋引擎與 AI 引擎的可見度」變成可以逐條檢查、
 而且每條都查得到依據的東西。**
 
+> Search Engine Optimization（**SEO**）、Answer Engine Optimization（**AEO**）、
+> Generative Engine Optimization（**GEO**）、Large Language Model Optimization（**LLMO**）
+> ——四個縮寫講的是同一件事的不同切面：**那台機器看不看得見你的內容、讀不讀得懂、
+> 願不願意引用。** 差別只在「那台機器」是搜尋引擎、問答引擎，還是語言模型。
+
 ---
 
 ## 為什麼再做一個
