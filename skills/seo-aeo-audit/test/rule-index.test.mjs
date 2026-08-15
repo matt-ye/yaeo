@@ -93,6 +93,18 @@ check(Boolean(countOk), '索引開頭的計數與實際相符',
   `   索引寫：${claimed ? claimed[0] : '(找不到計數那一行)'}\n`
   + `   實際：**${emitted.size} 條規則**：L1 ${actual.L1}／L2 ${actual.L2}／L3 ${actual.L3}／SITE ${actual.SITE}`);
 
+/* 小節標題也帶數字（### L2 內容結構（29）），一樣會漂。
+   這一條是補的：上一版只驗開頭那行總計，於是總計改成 56、小節標題還留著
+   「L2 內容結構（23）」——索引裡同時存在兩個互相矛盾的數字，而守衛說通過。
+   **文件裡有幾個地方寫了數字，就要驗幾個地方。** */
+const SECTION = /^### (L1|L2|L3|SITE)\s[^（(]*[（(](\d+)[）)]/gm;
+const badSections = [];
+for (const m of indexSection.matchAll(SECTION)) {
+  if (+m[2] !== actual[m[1]]) badSections.push(`${m[0].trim()} → 實際 ${actual[m[1]]}`);
+}
+check(badSections.length === 0, '各層小節標題的計數與實際相符',
+  badSections.map((s) => `      ${s}`).join('\n'));
+
 if (templated.length) {
   console.log(`\nℹ 有 ${templated.length} 處代碼由樣板字串組成，無法靜態展開，請人工確認已列入索引：`);
   [...new Set(templated)].forEach((t) => console.log(`     ${t}`));

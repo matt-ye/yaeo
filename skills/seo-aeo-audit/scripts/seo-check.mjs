@@ -508,6 +508,94 @@ function auditPage(rawHtml, page) {
     }
   }
 
+  /* data-i18n ＋ JS 字典：第三種雙語機制。前兩種（成對 span、lang 標記）
+     現有規則都看得到，這種完全看不到。
+
+     實際漏過的案例：某頁英文版的主標題整句是中文，三個月沒被任何檢查抓到。
+     它的表現形式是「en 欄位存在、內容是中文」——**任何「有沒有填」的檢查都會
+     判它通過**，因為欄位確實填了。要抓它只能比對值本身。
+
+     ⚠ 刻意只做「非中日韓語言的字典值裡有中日韓字元」，不做「zh 與 en 的值相同」。
+     後者在實測資料上誤報率 100%：某站兩個頁面共 5 個 zh/en 相同的鍵，逐一確認後
+     全部是專有名詞或本來就是英文的標籤（One More Step、AW#33 RFS、DATA、OPINION）。
+     **一個全部命中都不用改的訊號不該存在**——那不是「訊息裡說明一下」能補救的，
+     是判準本身分不出東西。
+
+     ⚠ 找不到字典時**明確說出來**，不要靜默通過。這條只認得 `zh: { … }, en: { … }`
+     這類物件字面值，而多數站用 i18next 或別的格式。抓不到卻不說，使用者會以為
+     檢查過了——「成功但空手而回」要和「真的沒問題」分得開。 */
+  const i18nKeys = [...new Set([...dom.matchAll(/\bdata-i18n="([^"]+)"/g)].map((m) => m[1]))];
+  if (i18nKeys.length >= 3) {
+    /* 從 { 開始做括號配對，字串內的括號不算 */
+    const blockAt = (s, open) => {
+      let depth = 0, q = null;
+      for (let i = open; i < s.length; i++) {
+        const c = s[i];
+        if (q) { if (c === q && s[i - 1] !== '\\') q = null; continue; }
+        if (c === "'" || c === '"' || c === '`') { q = c; continue; }
+        if (c === '{') depth++;
+        else if (c === '}') { depth--; if (!depth) return s.slice(open + 1, i); }
+      }
+      return null;
+    };
+
+    const dicts = new Map();
+    for (const m of html.matchAll(/\b(zh(?:[-_]?(?:TW|CN|Hant|Hans))?|en|ja|ko)\s*:\s*\{/gi)) {
+      const body = blockAt(html, m.index + m[0].length - 1);
+      if (!body) continue;
+      const pairs = [...body.matchAll(/([\w$]+)\s*:\s*(["'])((?:(?!\2)[^\\]|\\.)*)\2/g)];
+      /* 至少 3 組才當字典——避免把不相干的小物件（設定、對照表）誤認 */
+      if (pairs.length < 3) continue;
+      const lang = m[1].toLowerCase();
+      if (!dicts.has(lang)) dicts.set(lang, Object.fromEntries(pairs.map((p) => [p[1], p[3]])));
+    }
+
+    if (dicts.size < 2) {
+      add('info', 'L2-I18N-DICT-UNCHECKED',
+        `有 ${i18nKeys.length} 個 data-i18n 鍵，但找不到可解析的語言字典（只認得 zh:{…}, en:{…} 這類物件字面值）——**此項未檢查**，不代表沒問題`);
+    } else {
+      const isCJKLang = (l) => ['zh', 'ja', 'ko'].some((x) => l.startsWith(x));
+
+      /* ① 非中日韓語言的字典裡出現中日韓字元 → 那個值沒翻。
+         方向不對稱的理由同 L1-LANG-CONTENT-MISMATCH。 */
+      const untranslated = [];
+      for (const [lang, d] of dicts) {
+        if (isCJKLang(lang)) continue;
+        for (const [k, v] of Object.entries(d)) if (/[㐀-鿿]/.test(v)) untranslated.push({ lang, k, v });
+      }
+      if (untranslated.length) {
+        const u = untranslated[0];
+        add('warn', 'L2-I18N-DICT-UNTRANSLATED',
+          `${untranslated.length} 個字典值仍是中日韓文字（例：${u.lang}.${u.k} =「${u.v.slice(0, 24)}」）——欄位有填但沒翻，「有沒有填」的檢查抓不到`,
+          untranslated.length);
+      }
+
+      /* ② data-i18n 用了字典沒有的鍵 → 切語言時那個位置會是空的。真的壞掉。 */
+      const known = new Set([...dicts.values()].flatMap((d) => Object.keys(d)));
+      const orphan = i18nKeys.filter((k) => !known.has(k));
+      if (orphan.length) {
+        add('warn', 'L2-I18N-DICT-KEY-MISMATCH',
+          `${orphan.length} 個 data-i18n 鍵在字典裡不存在（${orphan.slice(0, 4).join('、')}）——切換語言時這些位置會是空的`,
+          orphan.length);
+      }
+
+      /* ③ 各語言字典的鍵集合不一致 → 某個語言會少一段。 */
+      const langs = [...dicts.keys()];
+      const asym = new Set();
+      for (const a of langs) {
+        for (const b of langs) {
+          if (a === b) continue;
+          for (const k of Object.keys(dicts.get(a))) if (!(k in dicts.get(b))) asym.add(`${k}（只有 ${a} 有）`);
+        }
+      }
+      if (asym.size) {
+        add('info', 'L2-I18N-DICT-KEY-MISMATCH',
+          `語言字典的鍵集合不一致：${[...asym].slice(0, 4).join('、')}${asym.size > 4 ? ' …' : ''}`,
+          asym.size);
+      }
+    }
+  }
+
   // 圖片 alt
   const imgs = [...dom.matchAll(/<img\b[^>]*>/gi)].map((m) => m[0]);
   const noAlt = imgs.filter((t) => attr(t, 'alt') === null);

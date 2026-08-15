@@ -367,7 +367,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 
 ## 完整規則索引
 
-**56 條規則**：L1 13／L2 26／L3 4／SITE 13。
+**59 條規則**：L1 13／L2 29／L3 4／SITE 13。
 上面〈逐項怎麼修〉是策展過的常見項，這裡是全部。
 
 > 這份索引由 `test/rule-index.test.mjs` 守著：新增規則卻沒補進來，測試會失敗並
@@ -378,7 +378,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 > 級別的意思：`error` = 幾乎必然有害且判準明確；`warn` = 該看但可能有正當理由；
 > `info` = 訊號弱或數量大，**不必清零**。調整級別前先讀〈調整門檻時的原則〉。
 
-### L1 技術基礎（12）
+### L1 技術基礎（13）
 
 | 代碼 | 級別 | 是什麼 |
 |---|---|---|
@@ -396,7 +396,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | `L1-TWITTER-CARD-MISSING` | info | 缺 `twitter:card` |
 | `L1-TWITTER-SITE-MISSING` | info | 有 `twitter:creator` 但缺 `twitter:site`（作者帳號 vs 網站帳號，用途不同） |
 
-### L2 內容結構（23）
+### L2 內容結構（29）
 
 | 代碼 | 級別 | 是什麼 |
 |---|---|---|
@@ -426,6 +426,9 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | `L2-NO-ARTICLE-TAG` | info | 標為 Article 卻沒有 `<article>` 元素 |
 | `L2-BREADCRUMB-MISSING` | warn | 缺 BreadcrumbList JSON-LD。路徑越深收益越大（首頁不報） |
 | `L2-BILINGUAL-CONCAT` | info | 同頁雙語 DOM 造成的中英黏連。**訊息會分辨兩種狀況**：架構問題 vs 翻譯進度 |
+| `L2-I18N-DICT-UNTRANSLATED` | warn | `data-i18n` 字典裡，非中日韓語言的值仍是中日韓文字。**欄位有填但沒翻**——「有沒有填」的檢查抓不到。方向不對稱：中文字典裡有拉丁字母（品牌名、程式碼）不報 |
+| `L2-I18N-DICT-KEY-MISMATCH` | warn／info | warn＝`data-i18n` 用了字典沒有的鍵（切語言時那個位置會是空的）；info＝各語言字典的鍵集合不一致 |
+| `L2-I18N-DICT-UNCHECKED` | info | 有 `data-i18n` 但找不到可解析的字典（只認得 `zh:{…}, en:{…}` 這類物件字面值）。**明說未檢查，不是通過**——多數站用 i18next 或別的格式 |
 
 ### L3 AI 可見度（4）
 

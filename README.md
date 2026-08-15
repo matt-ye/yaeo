@@ -40,7 +40,7 @@ SEO → AEO → GEO → LLMO，縮寫每季都在增加。這個 repo 不打算�
 
 | 路徑 | 是什麼 |
 |---|---|
-| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ **56 條規則**（L1 13／L2 26／L3 4／SITE 13） |
+| `skills/seo-aeo-audit/` | Claude Code skill：四層檢核 ＋ **59 條規則**（L1 13／L2 29／L3 4／SITE 13） |
 | `skills/seo-aeo-audit/scripts/seo-check.mjs` | 零相依的靜態檢核器（Node，不需 npm install） |
 | `skills/seo-aeo-audit/scripts/psi-check.mjs` | PageSpeed Insights 包裝（需自己的 API key） |
 | `skills/seo-aeo-audit/test/` | 回歸測試。只有**判準出過問題**的規則才有，理由見〈哪些規則值得寫測試〉 |
@@ -49,7 +49,7 @@ SEO → AEO → GEO → LLMO，縮寫每季都在增加。這個 repo 不打算�
 > **每一條規則的完整索引在 `skills/seo-aeo-audit/SKILL.md` 的〈完整規則索引〉**
 > ——代碼、級別、是什麼，一條不漏，不必去讀 45 KB 的腳本。
 >
-> 「56」數的是不重複的規則代碼，而且**由 `test/rule-index.test.mjs` 守著**——
+> 「59」數的是不重複的規則代碼，而且**由 `test/rule-index.test.mjs` 守著**——
 > 新增規則卻沒補進索引，測試會失敗並指名漏了哪幾條。
 >
 > ⚠ 這個守衛是補的。索引第一版宣稱「一條不漏」卻漏了 4 條，因為當時的抽取腳本
@@ -88,6 +88,7 @@ node skills/seo-aeo-audit/test/dead-link.test.mjs
 node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 node skills/seo-aeo-audit/test/lang-content-mismatch.test.mjs
 node skills/seo-aeo-audit/test/rule-index.test.mjs
+node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 ```
 
 零相依、直接跑，輸出是給人看的（每個情境印出在測什麼）。

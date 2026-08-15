@@ -45,7 +45,7 @@ so applying it in reverse would misfire across the board.
 
 | Path | What it is |
 |---|---|
-| `skills/seo-aeo-audit/` | Claude Code skill: four layers of checks, **56 rules** (L1 13 / L2 26 / L3 4 / SITE 13) |
+| `skills/seo-aeo-audit/` | Claude Code skill: four layers of checks, **59 rules** (L1 13 / L2 29 / L3 4 / SITE 13) |
 | `skills/seo-aeo-audit/scripts/seo-check.mjs` | Zero-dependency static checker (Node, no `npm install`) |
 | `skills/seo-aeo-audit/scripts/psi-check.mjs` | PageSpeed Insights wrapper (bring your own API key) |
 | `skills/seo-aeo-audit/test/` | Regression tests — only for rules whose **criteria have gone wrong before**; see "Which rules deserve a test" |
@@ -55,7 +55,7 @@ so applying it in reverse would misfire across the board.
 > — code, severity, and what it means, with nothing left out. You shouldn't have to read
 > a 45 KB script to find out what the rules are.
 >
-> "56" counts distinct rule codes, and it is **guarded by `test/rule-index.test.mjs`** —
+> "59" counts distinct rule codes, and it is **guarded by `test/rule-index.test.mjs`** —
 > add a rule without listing it and the test fails, naming exactly what is missing.
 >
 > That guard was added after the fact. The first version of the index claimed to be complete
@@ -95,6 +95,7 @@ node skills/seo-aeo-audit/test/dead-link.test.mjs
 node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 node skills/seo-aeo-audit/test/lang-content-mismatch.test.mjs
 node skills/seo-aeo-audit/test/rule-index.test.mjs
+node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 ```
 
 Zero dependencies, run them directly; the output is written for humans
