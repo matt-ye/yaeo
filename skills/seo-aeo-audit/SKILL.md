@@ -311,7 +311,13 @@ noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode �
 - 不檢核效能（Core Web Vitals 走 PageSpeed Insights API）。
   ⚠ **PSI API 必須自備 API key**：不帶 key 走 Google 公共匿名配額池，實測（2026-08-11）
   直接回 `429 Quota exceeded`。文件寫的每日 25,000 次是**有 key 之後**的配額
-- 不檢核實際排名與收錄狀態（走 Google Search Console API；2026-06 起含 AI Overview 曝光數據）
+- 不檢核實際排名與收錄狀態（走 Google Search Console API；2026-06 起含 AI Overview 曝光數據）。
+  ⚠ 「AI 可見度」尤其不要用單次量測看：[arXiv 2604.07585](https://arxiv.org/abs/2604.07585)
+  在四個引擎上跑 45–46 天的每日量測，來源集合的日間 Jaccard 只有 0.34–0.42
+  （**每天約 65% 的來源會換掉**），RBO 0.21–0.26；同一天內同時重跑，來源
+  Jaccard 也只有 0.32–0.43。作者建議品牌可見度至少 7 runs/prompt/日、
+  來源覆蓋至少 8 runs、觀測窗 2–4 週滾動。
+  **任何工具（包含這一支）宣稱「幫你測 AI 可見度」而只跑一次，數字都不可信。**
 - **外部連結是否還活著不在檢核範圍**——`SITE-DEAD-INTERNAL-LINK` 只驗站內路徑。
   外連要另外跑連結健檢，判準見 `PROMPT_連結驗證與來源查核SOP.md`（非 2xx ≠ 失效）
 
@@ -328,6 +334,32 @@ noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode �
   > 實際到得了的所有網址形式，再看連結有沒有命中。回歸測試在
   > `test/dead-link.test.mjs`，三種輸出模式各埋一條真死連結——
   > 因為修誤判最容易的假解法，就是把規則放寬到不再觸發。
+
+### 靜態檢核的天花板：大多數引用失敗這支腳本碰不到
+
+[arXiv 2603.09296](https://arxiv.org/abs/2603.09296) 建了一份引用失敗的分類，
+並給出各類在**它那份樣本**裡的佔比：
+
+| 失敗類別 | 佔比 | 靜態 HTML 看得到嗎 |
+|---|---|---|
+| 技術完整性（存取封鎖、JS／動態渲染失敗、無法解析、訊噪比過低） | 10.1% | 大多可以 |
+| **語意對齊**（意圖分歧、脈絡缺口、資訊過時、地區錯配） | **62.2%** | **不行**——要知道查詢意圖與競爭對手 |
+| 內容品質（資訊過淺、版面無結構＝密集散文缺標題與表格） | 27.1% | 結構可以，深度不行 |
+| 系統性排除（競爭冗餘、脈絡窗截斷） | 0.6% | 不行 |
+
+⚠ 這些百分比是**該篇樣本的分佈，不是普世常數**，不要拿去當目標或基準。
+
+有用的是那個方向：**佔比最大的一類，靜態檢核在建構上就碰不到。**
+「意圖分歧」要知道使用者想幹什麼、「脈絡缺口」要知道競爭對手寫了什麼，
+兩者都不在一份 HTML 裡。所以這支腳本全過**不等於**內容會被引用——
+它能替你排除的是技術與結構那一段，剩下的是寫作問題。
+
+反過來，這份分類也給了現有立場旁證：
+
+- 「JS／動態渲染失敗」獨立成一個失敗模式 → 支持〈這支腳本不執行 JS〉
+- 該篇的修復工具裡有「加標題階層與清單」、「把 boilerplate 包進語意容器」、
+  「頂部摘要框」→ 對應 L2 的 heading 階層與正文可見量。這是 L2 那批規則
+  第一次拿到「與引用失敗有關聯」的旁證（**關聯，不是因果**）
 
 ## 測試
 
@@ -491,6 +523,9 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035)（回顧 45 篇） | `L3-GEO-*` 的證據強度限定 |
 | [What Gets Cited: Competitive GEO in AI Answer Engines](https://arxiv.org/abs/2605.25517)（252,000 次試驗、6 個模型、18 因子） | `L3-GEO-*` 的「不給目標數字」立場 |
 | [Structural Feature Engineering for GEO](https://arxiv.org/abs/2603.29979) | 不是任何規則的依據——記錄證據衝突，見下 |
+| [Diagnosing and Repairing Citation Failures](https://arxiv.org/abs/2603.09296) | 〈靜態檢核的天花板〉；不執行 JS 的旁證 |
+| [The Discovery Gap](https://arxiv.org/abs/2601.00912) | 四層的排序；GEO 分數與被發現率零相關 |
+| [Don't Measure Once](https://arxiv.org/abs/2604.07585) | 〈已知限制〉為何不做單次可見度量測 |
 | [Google SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide) | L1 多數規則 |
 | [Google robots.txt 規範](https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt) | `SITE-ROBOTS-*`、`SITE-AI-*` |
 | [Google 結構化資料總覽](https://developers.google.com/search/docs/appearance/structured-data/search-gallery) | `L2-JSONLD-*`、`L2-ARTICLE-*` |

@@ -107,6 +107,43 @@
       "watch": "version",
       "quote": "consistent improvements in citation rate (17.3 percent) and subjective quality (18.5 percent)",
       "note": "usedBy 刻意留空——**這筆是記錄一個證據衝突，不是任何規則的依據。** 它聲稱結構特徵（文件架構／資訊分塊／視覺強調）帶來 17.3% 引用率提升，而 what-gets-cited-2026 用更大的受控設計得到「純格式改動影響極小」。兩篇都不算差，但方向相反，所以按本 repo 的紀律不動規則。留在這裡的用途是：下次有人（或生態掃描）撈到 GEO-SFE 並提議加規則時，看得到反面那一篇已經在檔案裡，不必重打一次這場架。"
+    },
+    {
+      "id": "citation-failures-2026",
+      "name": "Diagnosing and Repairing Citation Failures in Generative Engine Optimization",
+      "version": "arXiv 2603.09296",
+      "url": "https://arxiv.org/abs/2603.09296",
+      "usedBy": [
+        "〈靜態檢核的天花板〉的 62.2% 語意對齊佔比",
+        "設計立場②『不執行 JS』的旁證",
+        "L2 heading 階層與正文可見量的關聯性旁證"
+      ],
+      "watch": "version",
+      "quote": "over 40% relative improvement in citation rates while modifying only 5% of content",
+      "note": "引用失敗的分類與佔比（技術完整性 10.1%／語意對齊 62.2%／內容品質 27.1%／系統性排除 0.6%）。⚠ 這些百分比是**該篇樣本的分佈，不是普世常數**——SKILL.md 已標明，不要拿去當目標或基準。用途有兩個：① 誠實界定這支腳本的能力上限（佔比最大的那類靜態檢核碰不到）；② 它的修復工具庫裡有「加標題階層與清單」「boilerplate 包進語意容器」「頂部摘要框」，對應 L2 現有規則——但那是**關聯不是因果**，該篇沒有做逐工具 ablation，所以不拿來升級任何規則的嚴重度。"
+    },
+    {
+      "id": "discovery-gap-2026",
+      "name": "The Discovery Gap: How Product Hunt Startups Vanish in LLM Organic Discovery Queries",
+      "version": "arXiv 2601.00912",
+      "url": "https://arxiv.org/abs/2601.00912",
+      "usedBy": [
+        "四層架構的排序（L1／L2 基礎優先、L3 只報 info）",
+        "README〈LLMO 有幾條規則？0 條〉的第四條證據"
+      ],
+      "watch": "version",
+      "quote": "GEO efforts showed no correlation with actual discovery rates",
+      "note": "112 個 Product Hunt 新創、2,240 次查詢（ChatGPT 與 Perplexity）。發現式問句的成功率只有 3.32%／8.29%，與直接指名相差約 30 倍。關鍵：GEO 分數與實際被發現率**零相關**，反而是傳統訊號有預測力——referring domains +0.319、社群聲量 +0.395、Product Hunt 排名 −0.286。這是「先把 SEO 基礎做好」這個排序的獨立驗證，也是直接對著 AI 優化量不到效果的另一筆證據。不新增規則：它量的是站外訊號（外連網域、社群），本檢核器只看單一站台的建置產物，碰不到那些。"
+    },
+    {
+      "id": "measure-once-2026",
+      "name": "Don't Measure Once: Measuring Visibility in AI Search (GEO)",
+      "version": "arXiv 2604.07585",
+      "url": "https://arxiv.org/abs/2604.07585",
+      "usedBy": ["〈已知限制〉：為何不做單次 AI 可見度量測"],
+      "watch": "version",
+      "quote": "Single observations of AI visibility are misleading and risk over- or underestimating true brand presence",
+      "note": "四個引擎、45–46 天每日量測：來源集合的日間 Jaccard 僅 0.34–0.42（每天約 65% 的來源會換掉）、RBO 0.21–0.26；同一天內同時重跑，來源 Jaccard 也只有 0.32–0.43。作者建議品牌可見度至少 7 runs/prompt/日、來源覆蓋至少 8 runs、觀測窗 2–4 週滾動。不產生任何規則——它需要動態查詢與統計，本檢核器只讀建置產物。用途是替「不檢核實際排名與收錄狀態」這條邊界提供有出處的理由，並且明講這支腳本自己也不該假裝能量測 AI 可見度。"
     }
   ]
 }

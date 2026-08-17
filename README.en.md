@@ -229,6 +229,8 @@ symmetric, and then it misfires across the board.
 | [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035) (45 studies reviewed) | The evidence-strength limits on `L3-GEO-*` |
 | [What Gets Cited](https://arxiv.org/abs/2605.25517) (252,000 trials, 6 models, 18 factors) | Why `L3-GEO-*` gives no target numbers |
 | [Structural Feature Engineering for GEO](https://arxiv.org/abs/2603.29979) | Not a basis for any rule — recorded as an evidence conflict |
+| [Diagnosing and Repairing Citation Failures](https://arxiv.org/abs/2603.09296) | The ceiling on static checking; corroborates not executing JS |
+| [The Discovery Gap](https://arxiv.org/abs/2601.00912) (112 startups, 2,240 queries) | The ordering of the four layers; fourth strand of the LLMO argument |
 | Google Search Central documentation | Most of L1 / L2 |
 
 `watch/sources.json` is the machine-readable full list, checked monthly by GitHub Actions.

@@ -205,8 +205,16 @@ GitHub Pages **全部**預設支援 clean URL——而它是 **error** 級。
 | 來源 | 用在哪 |
 |---|---|
 | [Google Search Quality Rater Guidelines](https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf)（2025-09-11 版） | L4 全部頁碼依據 |
-| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024） | 五戰術與 `L3-GEO-*` |
+| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024，現為 v3） | 五戰術與 `L3-GEO-*` |
+| [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035)（回顧 45 篇） | `L3-GEO-*` 的證據強度限定 |
+| [What Gets Cited](https://arxiv.org/abs/2605.25517)（252,000 次試驗） | `L3-GEO-*` 為何不給目標數字 |
+| [Diagnosing and Repairing Citation Failures](https://arxiv.org/abs/2603.09296) | 靜態檢核的天花板；不執行 JS 的旁證 |
+| [The Discovery Gap](https://arxiv.org/abs/2601.00912)（112 個新創、2,240 次查詢） | 四層的排序；LLMO 0 條的第四條證據 |
 | Google Search Central 官方文件 | L1／L2 多數規則 |
+
+只列主要的幾筆。`watch/sources.json` 有 12 筆完整紀錄，其中 [`geo-sfe-2026`](https://arxiv.org/abs/2603.29979)
+的 `usedBy` 刻意留空——它記錄的是一個證據衝突，不是任何規則的依據。
+沒通過門檻的主題另存在 [`watch/investigated.json`](watch/investigated.json)。
 
 `watch/sources.json` 是機器可讀的完整清單，由 GitHub Actions 每月檢查是否失效。
 
