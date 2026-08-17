@@ -199,6 +199,17 @@
       "watch": "version",
       "quote": "optimized prompts reveal a stable, domain-agnostic pattern, suggesting the existence of a 'universally effective' GEO strategy",
       "note": "usedBy 刻意留空——**與 geo-sfe-2026 同樣是衝突紀錄，不是任何規則的依據。** 它主張存在「普遍有效的 GEO 策略」，牴觸 geo-survey-2026 的「通用啟發法轉移性差」。featgeo-2026 報告效果因領域而異，站綜述那邊，所以目前是 2 比 1。留著是為了下次有人引用 E-GEO 主張「有一套通用做法」時，反面那兩篇已經在檔案裡。"
+    },
+    {
+      "id": "spam-policies",
+      "name": "Google 垃圾內容政策（Search Essentials）",
+      "version": null,
+      "url": "https://developers.google.com/search/docs/essentials/spam-policies",
+      "usedBy": ["〈站外訊號〉為何不要用互連衝 referring domains"],
+      "watch": "updated",
+      "quote": "Excessive link exchanges (\"Link to me and I'll link to you\") or partner pages exclusively for the sake of cross-linking",
+      "section": "Link spam",
+      "note": "查證 2026-08-18。用途是把一個常見的行銷做法從「灰色、未來可能被罰」修正成「已經明文違規」——行銷公司讓手上客戶的網站互相連結來拉高 referring domains，正是這一條列舉的行為。這個區別重要：前者聽起來像風險評估，後者是既有政策，而 ai-search-earned-media-2026 那批研究讓 referring domains 看起來更值得追求，剛好是最容易讓人走上這條路的時候。"
     }
   ]
 }

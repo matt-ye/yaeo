@@ -246,6 +246,24 @@ no correlation with discovery rates at all**.
 **A clean report here is still compatible with never being cited, for want of anyone
 else having written about you.**
 
+So what do you do about it? The work at this layer isn't editing pages — it's **giving
+other people something worth citing**: original data, a method someone can reproduce, a
+position stated plainly. What this script can do is make sure that material is readable
+by crawlers, clearly structured and properly sourced — so that **when someone does want
+to cite you, nothing technical is in the way**. The rest is content and relationships.
+
+> ⛔ **Don't try to game this with reciprocal links.** A common agency tactic is to
+> cross-link the sites of every client on the books to inflate referring-domain counts.
+> This is not a grey-area trick that *might* be penalised later — Google's
+> [spam policies](https://developers.google.com/search/docs/essentials/spam-policies)
+> already name it under "Link spam":
+>
+> > "Excessive link exchanges ("Link to me and I'll link to you") or partner pages
+> > exclusively for the sake of cross-linking"
+>
+> And for an individual or a small team the tactic is unavailable anyway: it takes a
+> stable of sites you control.
+
 **③ The training corpus.**
 [arXiv 2601.00869](https://arxiv.org/abs/2601.00869) found that what decides whether a
 brand gets recommended is **the geography of the training data, not the language of the
@@ -265,6 +283,28 @@ in the build output, so the checker cannot see it.
 > Worth flagging, because the [survey](https://arxiv.org/abs/2607.14035) says GEO evidence
 > does not reach discoverability at all. This paper reaches it, and what it measures is
 > exactly what L1 / L2 already check.
+
+### "What should I change" splits into three layers — don't argue about them as one
+
+Published GEO advice contradicts itself constantly. Lay the studies side by side and most
+of the contradiction turns out to come from **not separating which layer is being edited
+from which stage it affects**:
+
+| What you change | Stage affected | Effect | Source |
+|---|---|---|---|
+| Rewording, lexical tweaks, surface rewriting | Citation | Minimal, sometimes harmful (−14%, **−36%**) | [2605.25517](https://arxiv.org/abs/2605.25517), [2602.12187](https://arxiv.org/abs/2602.12187) |
+| **title / description / H1–H6 / JSON-LD** | **Getting retrieved** | **+22% Hit Rate, +2.72 rank** | [2602.12187](https://arxiv.org/abs/2602.12187) |
+| **Statistics, cited sources, unique information** | Citation | Substantial; the two largest contributors in ablation | [2604.19113](https://arxiv.org/abs/2604.19113), [2311.09735](https://arxiv.org/abs/2311.09735) |
+
+This is also why the checker reports by layer instead of handing you one score: **the
+three layers have different evidence strength, so they license different verdicts.**
+L1 / L2 may raise an `error`; L3 only ever reports `info` and never states a target
+number; L4 is left to a human.
+
+> A concrete example: one family of automated rewriting tools asks a language model to
+> explain "what engines prefer", then rewrites body text to match those explanations.
+> SAGEO Arena measured that approach costing **36%** of retrieval performance — it
+> optimises the first layer and pays for it in the second.
 
 ---
 

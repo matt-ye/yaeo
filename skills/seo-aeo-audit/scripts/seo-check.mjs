@@ -738,6 +738,28 @@ function auditPage(rawHtml, page) {
       (mainHtml.match(/<(blockquote|q)\b/gi) || []).length +
       (text.match(/[「『][^」』]{8,}[」』]/g) || []).length;
 
+    /* 版面結構：清單、表格、次級標題。
+       三篇研究指向同一件事——長篇散文缺清單與表格會降低被引用的機率：
+       FeatGEO 的 `list_density`（arXiv 2604.19113）、SAGEO Arena 的修復工具
+       「加標題階層與清單」（2602.12187）、以及引用失敗分類裡的「版面無結構」
+       （2603.09296，佔內容品質那 27.1% 的一部分）。
+
+       ⚠ **這是描述，不是判準。** 三篇**沒有一篇給閾值**：多長算長篇、
+       幾個清單算夠，都沒有。所以這裡不新增規則、不設門檻，只把數字寫進
+       既有訊息，讓讀報告的人自己判斷。
+
+       為什麼不另立一條規則：它的訊號會和 `L2-THIN-CONTENT` 高度重疊，
+       同一批長而扁的頁面被念兩次，只是多一條噪音
+       （完整理由見 watch/investigated.json 的 list-density-rule）。
+
+       已知代價：三項訊號都齊備的頁面兩條規則都不觸發，於是版面數字也不會
+       出現。這是「不另立規則」換來的——附註在既有訊號上，就只能跟著它出現。 */
+    const layoutBlocks = (mainHtml.match(/<(ul|ol|table|dl)\b/gi) || []).length;
+    const subheads = (mainHtml.match(/<h[2-6]\b/gi) || []).length;
+    const layout = `清單/表格 ${layoutBlocks} 處、次級標題 ${subheads} 個`;
+
+    /* ⚠ 不要把版面結構加進 missing。`missing.length === 3` 是
+       L3-GEO-SIGNALS-NONE 的觸發條件，多一項會讓「三項全缺」永遠不成立。 */
     const missing = [
       outbound.size === 0 ? '外部引用' : null,
       stats === 0 ? '統計數據' : null,
@@ -746,10 +768,10 @@ function auditPage(rawHtml, page) {
 
     if (missing.length === 3) {
       add('info', 'L3-GEO-SIGNALS-NONE',
-        `這頁沒有外部引用、統計數據與直接引言——這三項有實驗支持能提高「被撈到之後獲得引用」的機率（GEO, KDD 2024），但 2026 綜述指出該效果以來源已進入脈絡為前提，不等於提升被發現的機會`);
+        `這頁沒有外部引用、統計數據與直接引言——這三項有實驗支持能提高「被撈到之後獲得引用」的機率（GEO, KDD 2024；FeatGEO 2026 的逐特徵消融顯示統計數據與引用來源貢獻最大），但 2026 綜述指出該效果以來源已進入脈絡為前提，不等於提升被發現的機會。版面另記：${layout}（描述性資訊，未列入判定）`);
     } else if (missing.length) {
       add('info', 'L3-GEO-SIGNALS-THIN',
-        `GEO 訊號偏少（缺${missing.join('、')}；現有 外部引用 ${outbound.size} 個、統計 ${stats} 處、引言 ${quotes} 處）`);
+        `GEO 訊號偏少（缺${missing.join('、')}；現有 外部引用 ${outbound.size} 個、統計 ${stats} 處、引言 ${quotes} 處；版面 ${layout}，未列入判定）`);
     }
   }
 
