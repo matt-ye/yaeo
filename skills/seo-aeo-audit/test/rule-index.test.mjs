@@ -17,7 +17,7 @@
  *
  * 零相依，直接跑：node skills/seo-aeo-audit/test/rule-index.test.mjs
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -104,6 +104,60 @@ for (const m of indexSection.matchAll(SECTION)) {
 }
 check(badSections.length === 0, '各層小節標題的計數與實際相符',
   badSections.map((s) => `      ${s}`).join('\n'));
+
+/*
+ * 出處與已查證主題的筆數，文件裡也寫了——一樣會漂。
+ *
+ * 這一段是補的（2026-08-18）：加了一筆 spam-policies 之後 sources.json 變成
+ * 19 筆，而中英 README 都還寫著「18 筆」。規則索引漂過一次、小節標題漂過
+ * 一次、現在是出處筆數，**同一類錯誤第三次**。所以照上面那句話辦：
+ * 文件裡有幾個地方寫了數字，就要驗幾個地方。
+ *
+ * 找不到宣稱時**判失敗，不是跳過**。有人改寫句子而守衛靜靜失效，
+ * 比守衛報錯糟得多——那正是這支測試存在的原因。
+ */
+const ROOT = join(HERE, '..', '..', '..');
+const ledgers = [
+  { file: join(ROOT, 'watch', 'sources.json'), key: 'sources', label: 'sources.json' },
+  { file: join(ROOT, 'watch', 'investigated.json'), key: 'topics', label: 'investigated.json' },
+];
+const counts = {};
+for (const l of ledgers) counts[l.label] = JSON.parse(readFileSync(l.file, 'utf8'))[l.key].length;
+
+const claims = [
+  { doc: 'README.md', ledger: 'sources.json', re: /sources\.json[^\n]*?有\s*(\d+)\s*筆/ },
+  { doc: 'README.md', ledger: 'investigated.json', re: /investigated\.json[^\n]*?\n?[^\n]*?（目前\s*(\d+)\s*筆）/ },
+  { doc: 'README.en.md', ledger: 'sources.json', re: /sources\.json[^\n]*?holds all\s*(\d+)/ },
+  { doc: 'README.en.md', ledger: 'investigated.json', re: /investigated\.json[^\n]*?\n?[^\n]*?\((\d+) so far\)/ },
+];
+const badClaims = [];
+for (const c of claims) {
+  const text = readFileSync(join(ROOT, c.doc), 'utf8');
+  const m = text.match(c.re);
+  if (!m) { badClaims.push(`${c.doc}：找不到 ${c.ledger} 的筆數宣稱（句子被改寫了？守衛要一起更新）`); continue; }
+  if (+m[1] !== counts[c.ledger]) badClaims.push(`${c.doc}：${c.ledger} 寫 ${m[1]} 筆，實際 ${counts[c.ledger]} 筆`);
+}
+check(badClaims.length === 0,
+  `文件宣稱的出處筆數與實際相符（sources ${counts['sources.json']}／investigated ${counts['investigated.json']}）`,
+  badClaims.map((s) => `      ${s}`).join('\n'));
+
+/*
+ * 測試檔清單也要對得上。
+ *
+ * SKILL.md〈測試〉那節原本只列 2 支並寫「所有檢查點裡只有這兩條有測試」，
+ * 而目錄裡已經有 5 支——其中兩支還是同一天加的。那句話從描述變成錯誤陳述，
+ * 而它偏偏是在解釋「哪些規則值得寫測試」的判準，讀者最容易當真的地方。
+ */
+const testFiles = readdirSync(HERE).filter((f) => f.endsWith('.test.mjs')).sort();
+/* ⚠ 檔名含數字：`i18n-dict.test.mjs`。第一版寫 [a-z-]+ 就把它漏掉了，
+   於是守衛報「SKILL.md 沒列 i18n-dict」而 SKILL.md 明明列了——
+   **一支專門抓漏配的測試，自己犯了漏配。** 字元類要含 0-9。 */
+const listedTests = [...new Set(
+  [...skill.matchAll(/test\/([a-z0-9-]+)\.test\.mjs/g)].map((m) => `${m[1]}.test.mjs`),
+)].sort();
+const unlisted = testFiles.filter((f) => !listedTests.includes(f));
+check(unlisted.length === 0, `SKILL.md 列出了全部 ${testFiles.length} 支測試`,
+  `      未列出：${unlisted.join('、')}`);
 
 if (templated.length) {
   console.log(`\nℹ 有 ${templated.length} 處代碼由樣板字串組成，無法靜態展開，請人工確認已列入索引：`);

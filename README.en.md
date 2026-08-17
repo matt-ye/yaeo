@@ -234,6 +234,12 @@ contextual gaps, outdated facts — requires knowing what the user is asking and
 competitors wrote. **None of that is in a single HTML file.**
 (Those percentages are that paper's sample distribution, not universal constants.)
 
+This does **not** contradict the "+22% from structural fields" figure below: 62.2% is the
+distribution of reasons **citation fails**, while +22% is the effect of optimising
+structural fields on **being retrieved**. A page can make it into the candidate set
+cleanly and still go uncited because it answered the wrong question. Two numbers side by
+side read as a contradiction — **check which stage of the pipeline each one is about.**
+
 **② Off-page signals, which may matter more than on-page ones.**
 [arXiv 2509.08919](https://arxiv.org/abs/2509.08919) (1,000 queries, four engines)
 measures an overwhelming preference for third-party sources: 92.1% earned media in
@@ -326,7 +332,7 @@ number; L4 is left to a human.
 | [E-GEO](https://arxiv.org/abs/2511.20867) | Not a basis for any rule — records a conflicting "universal strategy" claim |
 | Google Search Central documentation | Most of L1 / L2 |
 
-Only the main entries are listed. [`watch/sources.json`](watch/sources.json) holds all 18,
+Only the main entries are listed. [`watch/sources.json`](watch/sources.json) holds all 19,
 two of which have a deliberately empty `usedBy` — they record evidence conflicts, not
 grounds for any rule. Topics that were investigated and **failed** the bar live in
 [`watch/investigated.json`](watch/investigated.json) (6 so far), so nobody reruns the same
