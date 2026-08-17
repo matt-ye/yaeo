@@ -41,6 +41,43 @@ so applying it in reverse would misfire across the board.
 
 ---
 
+## How many rules does LLMO have? Zero
+
+Not an oversight. It was **investigated** (2026-08-17), and there is no evidence base to
+build a rule on.
+
+**① In the peer-reviewed literature, LLMO means something else.** On arXiv, LLMO stands for
+Large Language Model **Optimizer** — a method that *uses* an LLM to optimise something:
+black-box network management ([2507.02689](https://arxiv.org/abs/2507.02689)), adversarial
+robustness architecture search ([2406.05433](https://arxiv.org/abs/2406.05433)). Nothing to
+do with website visibility.
+
+**② A critical survey of 45 studies (2023-11 to 2026-07) never uses the term**
+([2607.14035](https://arxiv.org/abs/2607.14035)). A survey covering three years of the whole
+field not mentioning the word at all is fairly strong negative evidence.
+
+**③ Everything currently using LLMO in the "optimise content for LLM answers" sense is a
+vendor blog** — and the numbers they circulate are exactly the kind this repo opens by
+rejecting: "original statistics lift visibility 30–40%", "a visitor from AI search is worth
+4x an organic one". Neither traces back to any primary research.
+
+The underlying question — how content gets retrieved, understood and cited by an LLM — does
+have a literature. But all of it is filed under GEO / AEO, and it is already covered by
+`L3-GEO-*` and `SITE-*`. **LLMO isn't a gap; it's another marketing label on the same body
+of research.**
+
+So the rules are organised by "can it be seen, can it be understood, will it be cited" —
+**not by acronym**. Add three more acronyms and that split still holds.
+
+> The full investigation record — queries run, why it was rejected, what would justify
+> revisiting — is in [`watch/investigated.json`](watch/investigated.json). The point of
+> keeping it is **not searching the same thing twice**: what fails the bar leaves no trace
+> unless you write it down, so the next person reruns the same searches without seeing why
+> it was rejected last time. `sources.json` records what passed the bar; this file records
+> what didn't.
+
+---
+
 ## What's here
 
 | Path | What it is |
@@ -188,7 +225,10 @@ symmetric, and then it misfires across the board.
 | Source | Used for |
 |---|---|
 | [Google Search Quality Rater Guidelines](https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf) (2025-09-11 edition) | Every page reference in L4 |
-| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735) (Aggarwal et al., KDD 2024) | The five tactics and `L3-GEO-*` |
+| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735) (Aggarwal et al., KDD 2024; now v3 on arXiv) | The five tactics and `L3-GEO-*` |
+| [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035) (45 studies reviewed) | The evidence-strength limits on `L3-GEO-*` |
+| [What Gets Cited](https://arxiv.org/abs/2605.25517) (252,000 trials, 6 models, 18 factors) | Why `L3-GEO-*` gives no target numbers |
+| [Structural Feature Engineering for GEO](https://arxiv.org/abs/2603.29979) | Not a basis for any rule — recorded as an evidence conflict |
 | Google Search Central documentation | Most of L1 / L2 |
 
 `watch/sources.json` is the machine-readable full list, checked monthly by GitHub Actions.

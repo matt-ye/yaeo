@@ -174,6 +174,28 @@ noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode �
 > 原本的訊息寫「唯一有同行評審實驗支持的槓桿」說過頭了，已改。
 > 嚴重度不變——本來就只報 `info`、本來就不給數字，克制的做法是對的。
 
+### 一個證據衝突，以及為什麼它不動規則（2026-08-17）
+
+兩篇 2026 年的論文對「結構／格式改動有沒有用」給出相反的答案：
+
+| 論文 | 設計 | 結論 |
+|---|---|---|
+| [2605.25517](https://arxiv.org/abs/2605.25517) What Gets Cited | 252,000 次試驗、6 個模型、18 個因子逐一配對、mixed-effects，品牌匿名＋來源順序對消 | topical relevance 與 list position 最強，**純格式改動影響極小** |
+| [2603.29979](https://arxiv.org/abs/2603.29979) GEO-SFE | 6 個引擎 | 結構特徵帶來引用率 **+17.3%** |
+
+**處置：不新增規則，也不改嚴重度。** 兩篇都不是差的研究，但方向相反，
+而本 repo 的門檻是「規則要有站得住的依據」，不是「有一篇支持就寫進去」。
+
+值得注意的是這個衝突落在哪一邊：前者的結論**支持現行做法**——既然純格式
+改動影響極小，`L3-GEO-*` 那三項就不該升級成硬規則、也不該給閾值。
+所以這次查證的產物是「原本的克制是對的」，不是一條新規則。
+這種結果一樣要寫下來，否則下一個人會以為這個主題沒人查過。
+
+> ⚠ 同時記下**沒有**拿來用的東西：2605.25517 也發現「時間戳新」有一致的
+> 正面效果。這**不能**用來加強 `L2-NO-MODIFIED-DATE`——「有 `dateModified`
+> 標記」不等於「內容是新的」，是兩個不同的主張。要做成規則需要一個
+> 「多舊算舊」的閾值，論文沒給。這種跳躍正是本 skill 反對的。
+
 **三件刻意的克制**，也是使用這條規則時該有的態度：
 
 1. **只報 `info`。** 論文說的是「加了會提升可見度」，不是「沒加就是錯」
@@ -465,7 +487,10 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 | 來源 | 用在哪 |
 |---|---|
 | [Google Search Quality Rater Guidelines](https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf)（2025-09-11 版，182 頁） | L4 全部頁碼依據 |
-| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024） | 五戰術與 `L3-GEO-*` |
+| [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024；arXiv 現為 v3） | 五戰術與 `L3-GEO-*` |
+| [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035)（回顧 45 篇） | `L3-GEO-*` 的證據強度限定 |
+| [What Gets Cited: Competitive GEO in AI Answer Engines](https://arxiv.org/abs/2605.25517)（252,000 次試驗、6 個模型、18 因子） | `L3-GEO-*` 的「不給目標數字」立場 |
+| [Structural Feature Engineering for GEO](https://arxiv.org/abs/2603.29979) | 不是任何規則的依據——記錄證據衝突，見下 |
 | [Google SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide) | L1 多數規則 |
 | [Google robots.txt 規範](https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt) | `SITE-ROBOTS-*`、`SITE-AI-*` |
 | [Google 結構化資料總覽](https://developers.google.com/search/docs/appearance/structured-data/search-gallery) | `L2-JSONLD-*`、`L2-ARTICLE-*` |

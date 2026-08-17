@@ -32,11 +32,11 @@
     {
       "id": "geo-paper",
       "name": "GEO: Generative Engine Optimization (Aggarwal et al., KDD 2024)",
-      "version": "arXiv 2311.09735",
+      "version": "arXiv 2311.09735v3",
       "url": "https://arxiv.org/abs/2311.09735",
       "usedBy": ["L3-GEO-SIGNALS-*", "寫作階段：GEO 五戰術"],
       "watch": "version",
-      "note": "論文本身不會改，但 arXiv 可能有新版本（v3、v4）。監測版本號而非內容。"
+      "note": "論文本身不會改，但 arXiv 會出新版本。監測版本號而非內容。⚠ 這個 version 欄位是**給人看的文件**，不是監測基準：check-sources.mjs 直接從 arXiv 頁面的 [vN] 標記讀當前版本，基準存在 sources.state.json（geo-paper 已於 2026-08-13 記下 v3）。原本這裡只寫「2311.09735」而 note 把 v3 講成假設，讀起來像是監測缺了基準——實際上沒有。補上 v 號是為了讓文件和 state 對得起來。"
     },
     {
       "id": "geo-survey-2026",
@@ -87,6 +87,26 @@
       "quote": "You don't need to create new machine readable files, AI text files, markup, or Markdown to appear in Google Search (including its generative AI capabilities), as Google Search itself doesn't use them... Doing so will neither harm nor help your site's visibility or rankings in Google Search, as Google Search ignores them.",
       "section": "Mythbusting generative AI search: what you don't need to do",
       "note": "補上網址時順帶發現：原始筆記記的段落標題是「Clarifying guidance on llms.txt files」，實際查證是上面那個。逐字聲明無誤、標題是轉述——只留標題不留網址的話，這個錯永遠不會被發現。"
+    },
+    {
+      "id": "what-gets-cited-2026",
+      "name": "What Gets Cited: Competitive GEO in AI Answer Engines",
+      "version": "arXiv 2605.25517",
+      "url": "https://arxiv.org/abs/2605.25517",
+      "usedBy": ["L3-GEO-SIGNALS-* 的『不給目標數字』立場"],
+      "watch": "version",
+      "quote": "topical relevance and list position are the strongest drivers; formatting-only changes have minimal impact",
+      "note": "目前找到的實驗設計最強的一篇：252,000 次試驗、6 個模型、18 個因子逐一配對、mixed-effects，並做品牌匿名與來源順序對消以隔離位置偏誤。收進來**不是為了新增規則**——它支持的正好是現行的克制做法：既然純格式改動影響極小，L3-GEO 那三項就不該升級成硬規則、也不該給閾值。與 geo-sfe-2026 結論衝突，見該筆 note。"
+    },
+    {
+      "id": "geo-sfe-2026",
+      "name": "Structural Feature Engineering for Generative Engine Optimization（GEO-SFE）",
+      "version": "arXiv 2603.29979",
+      "url": "https://arxiv.org/abs/2603.29979",
+      "usedBy": [],
+      "watch": "version",
+      "quote": "consistent improvements in citation rate (17.3 percent) and subjective quality (18.5 percent)",
+      "note": "usedBy 刻意留空——**這筆是記錄一個證據衝突，不是任何規則的依據。** 它聲稱結構特徵（文件架構／資訊分塊／視覺強調）帶來 17.3% 引用率提升，而 what-gets-cited-2026 用更大的受控設計得到「純格式改動影響極小」。兩篇都不算差，但方向相反，所以按本 repo 的紀律不動規則。留在這裡的用途是：下次有人（或生態掃描）撈到 GEO-SFE 並提議加規則時，看得到反面那一篇已經在檔案裡，不必重打一次這場架。"
     }
   ]
 }

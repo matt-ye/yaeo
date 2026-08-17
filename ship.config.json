@@ -1,0 +1,65 @@
+{
+  "owner": "matt-ye",
+  "repo": "yaeo",
+  "homepage": "mattye.dev/projects/agent-skills",
+  "install": "github.com/matt-ye/yaeo",
+  "summary": "YAEO — 把「網站對搜尋引擎與 AI 引擎的可見度」變成可逐條檢查、每條都附出處的東西。四層檢核、59 條規則、零相依。",
+  "category": "Web Development",
+  "tags": ["seo", "aeo", "geo", "llmo", "claude-code", "agent-skill", "i18n", "static-site"],
+  "price": { "amount": 0, "currency": "USD", "checkoutUrl": "" },
+  "assets": {
+    "brand": {
+      "name": "YAEO",
+      "emoji": "🔍",
+      "accent": "#93c5fd",
+      "accentDark": "#1d4ed8",
+      "bgTint": "#1e2a55",
+      "glow": "rgba(147,197,253,.20)"
+    },
+    "carousel": {
+      "slides": [
+        {
+          "type": "cover",
+          "title": "四個縮寫，<br>依據呢？",
+          "highlight": "依據呢？",
+          "sub": "SEO、AEO、GEO、LLMO。縮寫每季都在增加。但那些「加了會提升 30%」的數字，往回追常常找不到原始研究。"
+        },
+        {
+          "type": "feature",
+          "n": 1,
+          "title": "SEO<br>看不看得見",
+          "text": "title、description、canonical、sitemap、robots、heading 階層、正文可見量。L1 十三條加 L2 二十九條，腳本全自動判定。"
+        },
+        {
+          "type": "feature",
+          "n": 2,
+          "title": "AEO<br>撈不撈得到你",
+          "text": "站層級的標準檔：robots.txt、sitemap、RSS、llms.txt。重點是訓練蟲和檢索蟲是兩件事，robots.txt 要分流。llms.txt 成本低可放，但 Google 明言不使用。"
+        },
+        {
+          "type": "feature",
+          "n": 3,
+          "title": "GEO<br>撈到後會不會引用",
+          "text": "五戰術：引用來源、統計數據、直接引言、權威語氣、流暢度。KDD 2024 論文報告最高約 40% 可見度提升，單項最強是統計數據。但 2026 綜述指出前提是來源已進入脈絡，所以這幾條只報 info。"
+        },
+        {
+          "type": "feature",
+          "n": 4,
+          "title": "LLMO<br>專屬規則：0 條",
+          "text": "不是漏了。四個縮寫講的是同一件事的不同切面，規則按「看不看得見、讀不讀得懂、願不願意引用」來分，不按縮寫分。查不到依據的做法，這裡不寫成規則。"
+        },
+        {
+          "type": "feature",
+          "title": "59 條規則，<br>四層排法",
+          "text": "技術基礎、內容結構、AI 可見度、YMYL 與 <span style=\"white-space:nowrap\">E-E-A-T</span>。每條寫明依據哪份文件，或明白標示「從業共識，證據弱」。檢核的是 build 產出，因為爬蟲看到的和你看到的可以完全不同。"
+        },
+        {
+          "type": "cta",
+          "title": "59 條規則，<br>全部開源",
+          "highlight": "全部開源",
+          "lic": "零相依 · MIT · 或留言「yaeo」，我把連結傳給你"
+        }
+      ]
+    }
+  }
+}

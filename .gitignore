@@ -1,2 +1,7 @@
 node_modules/
 report.md
+
+# Pack-and-Ship 的資產產生器輸出（IG／LinkedIn 輪播、縮圖等）。
+# 可從 ship.config.json 完整重現，所以不進版本控制——與 Pack-and-Ship
+# 自己的 .gitignore 一致。
+dist/

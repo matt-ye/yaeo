@@ -1,0 +1,95 @@
+{
+  "_comment": [
+    "查證過、但結論是「不新增規則」的主題。",
+    "",
+    "為什麼要有這個檔：`sources.json` 記的是規則依賴的出處，也就是**通過門檻的**",
+    "東西。沒通過的如果不留紀錄，下一個人（或下一次生態掃描）會把同一輪搜尋",
+    "重跑一次，得到同一個結論——而且中間有機會做出不同的判斷，因為沒人看得到",
+    "上次否決的理由。",
+    "",
+    "刻意不放進 sources.json：那份清單會被 check-sources.mjs 逐一抓取、比對雜湊。",
+    "把不是依據的廠商部落格放進去，等於花力氣監測一堆與規則無關的頁面的改版。",
+    "",
+    "`evidence[].kind` 的意思：",
+    "  counter    = 支持「不該加規則」的證據",
+    "  not-a-source = 查到但不能當依據的東西（留連結是為了不要重複搜，不是為了引用）",
+    "",
+    "check-ecosystem.mjs 會把 topics[].topic 一併餵給判讀模型，",
+    "讓它知道這些主題已經查過，不要再當成新發現重報。"
+  ],
+  "topics": [
+    {
+      "id": "llmo",
+      "topic": "LLMO（Large Language Model Optimization，指「為 LLM 回答優化內容」的那個用法）",
+      "investigated": "2026-08-17",
+      "conclusion": "no-rules",
+      "summary": [
+        "查無可作為規則依據的實證。LLMO 在同行評審文獻裡不是這個意思，",
+        "而市面上以這個意思使用它的內容全部是廠商部落格，數字追不到原始研究。",
+        "",
+        "底層問題（內容如何被 LLM 撈到、讀懂、引用）本身有文獻，但它們一律",
+        "歸在 GEO／AEO 之下，已由 L3-GEO-* 與 SITE-* 涵蓋。也就是說 LLMO 不是",
+        "一個缺口，是同一批研究的另一個行銷標籤。"
+      ],
+      "queriesRun": [
+        "arXiv API：all:\"LLMO\" OR (abs:\"large language model optimization\" AND abs:\"search\")",
+        "arXiv API：abs:\"generative engine optimization\" OR abs:\"answer engine optimization\"（前 40 筆）",
+        "網頁搜尋：LLMO \"large language model optimization\" empirical study website visibility"
+      ],
+      "evidence": [
+        {
+          "kind": "counter",
+          "what": "arXiv 上的 LLMO 指 Large Language Model **Optimizer**，即「用 LLM 去做最佳化」的方法，與網站可見度無關",
+          "examples": [
+            "https://arxiv.org/abs/2507.02689",
+            "https://arxiv.org/abs/2406.05433",
+            "https://arxiv.org/abs/2312.03815",
+            "https://arxiv.org/abs/2305.06404"
+          ]
+        },
+        {
+          "kind": "counter",
+          "what": "回顧 45 篇研究（2023-11～2026-07）的批判性綜述，全文沒有出現 LLMO。一個回顧整個領域三年的綜述完全不提這個詞，是相當強的反面證據",
+          "examples": ["https://arxiv.org/abs/2607.14035"]
+        },
+        {
+          "kind": "not-a-source",
+          "what": "以「為 LLM 回答優化內容」使用 LLMO 的內容，目前全是廠商／行銷部落格。它們流傳的數字正是本 repo 反對的那一類——例如「原創統計數據可提升 30–40% 可見度」（歸給 Analyzify）、「AI 搜尋來的訪客價值是自然搜尋的 4 倍」（歸給 SEMrush），兩者都追不到原始研究。留連結是為了下次不用重搜，不是為了引用",
+          "examples": [
+            "https://www.conductor.com/academy/glossary/llmo-large-language-model-optimization/",
+            "https://searchatlas.com/blog/llmo/",
+            "https://websell.io/llm-optimization-for-ecommerce",
+            "https://www.rankscience.com/llmo",
+            "https://www.resultfirst.com/blog/ai-seo/what-are-llms-and-how-to-optimize-your-website-for-them/",
+            "https://medium.com/@shaneht/the-llmo-white-paper-optimizing-brand-discoverability-in-models-like-chatgpt-claude-and-8fabc36f3b7e",
+            "https://searchengineland.com/guides/large-language-model-optimization-llmo",
+            "https://llmrefs.com/llm-seo",
+            "https://www.outerboxdesign.com/articles/ai/llmo-and-geo-what-we-know-optimizing-for-llms-and-ai/"
+          ]
+        }
+      ],
+      "recheckWhen": "geo-survey-2026 出新版並開始收錄 LLMO，或 arXiv／同行評審場所出現以「為 LLM 回答優化內容」定義 LLMO 的實證論文。單靠廠商部落格增加不算理由——數量不是證據。"
+    },
+    {
+      "id": "agent-ready-websites",
+      "topic": "Agent-ready website：網站對 AI agent 的可操作性（不是可引用性）",
+      "investigated": "2026-08-17",
+      "conclusion": "clue-only",
+      "summary": [
+        "這是一條真的新軸線：agent 能不能**操作**你的網站，跟會不會被引用是兩件事，",
+        "現有四層沒有涵蓋。但目前只有一篇，證據強度到不了規則。"
+      ],
+      "queriesRun": [
+        "arXiv API：abs:\"generative engine optimization\" OR abs:\"answer engine optimization\"（現行 feed 就撈得到，不需要新查詢詞）"
+      ],
+      "evidence": [
+        {
+          "kind": "counter",
+          "what": "《Designing Agent-Ready Websites for AI Web Agents》報告 agent 成功率 89.3% vs 49.3%（134/150 vs 74/150），平均步數 9.31 → 6.49。但它比較的是「一個 baseline 站」對「一個優化站」，只做電商情境、三個模型、300 次執行，摘要裡沒有逐特徵的 ablation——無法判斷是哪一項改動帶來效果，因此也寫不出「檢查什麼」",
+          "examples": ["https://arxiv.org/abs/2607.12056"]
+        }
+      ],
+      "recheckWhen": "出現逐特徵 ablation、或非電商情境的複製研究。屆時要判斷的是「哪一個具體標記／結構可機械檢查」，不是整體成功率。"
+    }
+  ]
+}

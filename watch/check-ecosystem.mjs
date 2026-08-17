@@ -25,6 +25,7 @@ import { cfCreds, pickModel, runModel } from './cf.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATE = join(__dirname, 'ecosystem.state.json');
+const INVESTIGATED = join(__dirname, 'investigated.json');
 const RULES_SRC = join(__dirname, '..', 'skills', 'seo-aeo-audit', 'scripts', 'seo-check.mjs');
 
 const argv = process.argv.slice(2);
@@ -44,10 +45,48 @@ const FEEDS = [
   {
     id: 'arxiv-geo',
     name: 'arXiv：生成式引擎最佳化相關論文',
-    url: 'http://export.arxiv.org/api/query?search_query=abs:%22generative+engine+optimization%22+OR+abs:%22answer+engine+optimization%22&sortBy=submittedDate&sortOrder=descending&max_results=20',
+    url: 'http://export.arxiv.org/api/query?search_query=abs:%22generative+engine+optimization%22+OR+abs:%22answer+engine+optimization%22&sortBy=submittedDate&sortOrder=descending',
     why: 'L3-GEO-* 的依據是一篇 2024 的論文。後續研究可能推翻或細化它的結論。',
+    /*
+     * ⚠ 這裡原本寫死 `max_results=20`（2026-08-17 發現是靜默失效）。
+     *
+     * 查詢詞沒問題——實測 `2605.25517`、`2607.12056` 都撈得到。問題在視窗：
+     * 這個領域現在**五個月就產出 20 篇**，所以每次只拿最新 20 筆時，
+     * 比視窗更舊的論文永遠排不進來。而下面的狀態檔會把視窗內容標成「已看過」，
+     * 於是首跑之前的存量**進不了視野，也不會有任何跡象**：報告只會印
+     * 「本次沒有新項目」。實測狀態檔最舊一筆是 2604.19516（2026-04-21），
+     * 而 2603.29979 從未被掃到過。
+     *
+     * 這和 `SITE-DEAD-INTERNAL-LINK` 是同一個物種：在唯一測過的情況下
+     * （領域產出速度低於視窗大小）它本來就是對的。
+     *
+     * 改成分頁往回撈到底。size 給 100 是因為整個 GEO 語料目前只有數十篇，
+     * 一頁就吃得下；maxPages 是防呆上限，不是預期值。
+     */
+    page: { size: 100, maxPages: 5 },
   },
 ];
+
+/* 抓一個 feed 的全部項目。有 `page` 設定就往回分頁，直到某頁不滿一頁
+   （＝到底了）或撞到 maxPages。沒有 `page` 的照原樣抓一次。 */
+async function fetchEntries(f) {
+  const get = async (url) => {
+    const res = await fetch(url, { redirect: 'follow', headers: { 'user-agent': UA } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return parseFeed(await res.text());
+  };
+
+  if (!f.page) return get(f.url);
+
+  const { size, maxPages } = f.page;
+  const all = [];
+  for (let p = 0; p < maxPages; p++) {
+    const page = await get(`${f.url}&start=${p * size}&max_results=${size}`);
+    all.push(...page);
+    if (page.length < size) break;   // 不滿一頁＝已經到底
+  }
+  return all;
+}
 
 /* Feed 解析。刻意不引入 XML 套件——這個 repo 的腳本零相依，使用者要能直接
    node 跑。兩個來源結構單純，正則夠用，但**格式不一樣**：
@@ -88,9 +127,7 @@ const feedNotes = [];
 
 for (const f of FEEDS) {
   try {
-    const res = await fetch(f.url, { redirect: 'follow', headers: { 'user-agent': UA } });
-    if (!res.ok) { feedNotes.push(`❌ ${f.name}：HTTP ${res.status}`); continue; }
-    const entries = parseFeed(await res.text());
+    const entries = await fetchEntries(f);
     if (!entries.length) {
       /* 抓到了卻解析不出東西，多半是對方換了格式。這要講出來，
          否則會表現成「這個月沒有新消息」——一個永遠不會被發現的靜默失效。 */
@@ -101,8 +138,19 @@ for (const f of FEEDS) {
     const news = entries.filter((e) => !seen.has(e.id));
     fresh.push(...news.map((e) => ({ ...e, feed: f.name })));
     feedNotes.push(`✅ ${f.name}：${entries.length} 項，其中 ${news.length} 項是新的`);
-    /* 只留最近 200 筆，狀態檔不要無限長大 */
-    state.seen[f.id] = entries.map((e) => e.id).slice(0, 200);
+    /*
+     * 聯集，不是覆寫。原本寫 `= entries.map(...)`，也就是**用這次抓到的取代
+     * 整份紀錄**——視窗一縮（分頁失敗、對方限流、改回小 max_results），
+     * 舊 id 就從 seen 掉出去，下一輪又被當成新項目重報一次。
+     *
+     * 那個失效方向特別壞：它長得像「這個月論文很多」，不像壞掉。
+     * 聯集之後，只要看過就永遠算看過，跟這次抓到多少無關。
+     *
+     * 上限拉到 600（分頁最多 500）並且把這次的排前面，
+     * 確保不會把「這次仍然抓到的」擠掉。
+     */
+    const merged = [...entries.map((e) => e.id), ...(state.seen[f.id] ?? [])];
+    state.seen[f.id] = [...new Set(merged)].slice(0, 600);
   } catch (err) {
     feedNotes.push(`⚠️ ${f.name}：${err.message}`);
   }
@@ -118,6 +166,19 @@ for (const f of FEEDS) {
 const ruleIds = [...new Set(
   [...readFileSync(RULES_SRC, 'utf8').matchAll(/\badd\([^,]+,\s*'([A-Z][A-Z0-9-]+)'/g)].map((m) => m[1]),
 )];
+
+/* 已查證過、結論是不加規則的主題。餵給模型是為了它不要把同一件事
+   每個月當成新發現重報一次——規則代號那份清單管不到這些，因為
+   「查過了但沒有變成規則」在規則清單裡剛好長得像「還沒涵蓋」。
+
+   缺檔不靜默跳過：少了這份清單，判讀會退回到會重報的狀態，
+   而報告上看不出差別。 */
+let investigated = [];
+if (existsSync(INVESTIGATED)) {
+  investigated = JSON.parse(readFileSync(INVESTIGATED, 'utf8')).topics ?? [];
+} else {
+  feedNotes.push(`⚠️ 找不到 ${INVESTIGATED}，本次判讀沒有「已查證主題」清單，可能重報舊主題`);
+}
 
 const lines = ['\n## ③ 生態掃描\n'];
 lines.push(feedNotes.map((n) => `- ${n}`).join('\n') + '\n');
@@ -147,10 +208,17 @@ if (!fresh.length) {
         '3. 每一項都必須附上提供給你的原始連結。',
         '4. 不相關的就不要列。若全部都不相關，第一行只輸出「無」，不要再寫別的。',
         '5. 用繁體中文，每項一行，格式：`- [標題](連結) — 為什麼值得讀（一句）`',
+        '6. 下面「已查證過的主題」裡的東西不要再列，除非這一篇提供的是**新的實證**',
+        '   （例如逐特徵的對照實驗），而不是同一個主張的又一次轉述。',
         '',
         `現行規則代號（共 ${ruleIds.length} 條，只給代號供你判斷涵蓋範圍）：`,
         ruleIds.join('、'),
         '',
+        ...(investigated.length
+          ? ['已查證過、結論是不加規則的主題（連同否決理由）：',
+             ...investigated.map((t) => `- ${t.topic}｜結論：${t.conclusion}｜要重看的條件：${t.recheckWhen}`),
+             '']
+          : []),
         '新內容：',
         ...fresh.map((e, i) => `${i + 1}. 【${e.feed}｜${e.date}】${e.title}\n   連結：${e.link}\n   摘要：${e.summary}`),
       ].join('\n');
