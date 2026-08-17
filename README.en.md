@@ -220,6 +220,54 @@ symmetric, and then it misfires across the board.
 
 ---
 
+## What this checker cannot reach
+
+The easiest way to misread an audit report is to take "all green" as "done". So here
+is the ceiling, stated plainly. All three limits are sourced, and all three sit
+outside what this script can see.
+
+**① Most citation failures are semantic.**
+[arXiv 2603.09296](https://arxiv.org/abs/2603.09296) sorts citation failures into four
+classes; in their sample: technical integrity 10.1%, **semantic alignment 62.2%**,
+content quality 27.1%, systemic exclusion 0.6%. The largest class — intent divergence,
+contextual gaps, outdated facts — requires knowing what the user is asking and what
+competitors wrote. **None of that is in a single HTML file.**
+(Those percentages are that paper's sample distribution, not universal constants.)
+
+**② Off-page signals, which may matter more than on-page ones.**
+[arXiv 2509.08919](https://arxiv.org/abs/2509.08919) (1,000 queries, four engines)
+measures an overwhelming preference for third-party sources: 92.1% earned media in
+consumer electronics, 74.2% in software, 69.1% in automotive — with social content at
+**0%** in two of the three verticals.
+[Another study](https://arxiv.org/abs/2601.00912) found the predictive signals were
+referring domains (+0.319) and community presence (+0.395), while **GEO scores showed
+no correlation with discovery rates at all**.
+
+**A clean report here is still compatible with never being cited, for want of anyone
+else having written about you.**
+
+**③ The training corpus.**
+[arXiv 2601.00869](https://arxiv.org/abs/2601.00869) found that what decides whether a
+brand gets recommended is **the geography of the training data, not the language of the
+query**: on identical English queries, Chinese LLMs mentioned brands 88.9% of the time
+versus 58.3% for international models; their case brand scored 65.6% in Chinese LLMs and
+**0%** in international ones. That gives bilingual publishing a reason beyond SEO — an
+English edition is entry into a different training corpus — but corpus inclusion is not
+in the build output, so the checker cannot see it.
+
+> Conversely, **the on-page half does have empirical support.**
+> [arXiv 2602.12187](https://arxiv.org/abs/2602.12187) (SAGEO Arena) indexes
+> title / description / H1–H6 / JSON-LD as separate fields and compares optimising those
+> structural fields against optimising body text only: the former gains **+22% Hit Rate
+> and +2.72 retrieval rank**, the latter degrades consistently (one automated rewriting
+> method cost **36%** of retrieval performance).
+>
+> Worth flagging, because the [survey](https://arxiv.org/abs/2607.14035) says GEO evidence
+> does not reach discoverability at all. This paper reaches it, and what it measures is
+> exactly what L1 / L2 already check.
+
+---
+
 ## Sources
 
 | Source | Used for |
@@ -229,9 +277,20 @@ symmetric, and then it misfires across the board.
 | [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035) (45 studies reviewed) | The evidence-strength limits on `L3-GEO-*` |
 | [What Gets Cited](https://arxiv.org/abs/2605.25517) (252,000 trials, 6 models, 18 factors) | Why `L3-GEO-*` gives no target numbers |
 | [Structural Feature Engineering for GEO](https://arxiv.org/abs/2603.29979) | Not a basis for any rule — recorded as an evidence conflict |
+| [SAGEO Arena](https://arxiv.org/abs/2602.12187) (structural fields, +22% Hit Rate) | Empirical support for L1 / L2 at the retrieval stage |
+| [FeatGEO](https://arxiv.org/abs/2604.19113) (13 features, with ablation) | Per-feature ablation of the three `L3-GEO-*` signals |
 | [Diagnosing and Repairing Citation Failures](https://arxiv.org/abs/2603.09296) | The ceiling on static checking; corroborates not executing JS |
 | [The Discovery Gap](https://arxiv.org/abs/2601.00912) (112 startups, 2,240 queries) | The ordering of the four layers; fourth strand of the LLMO argument |
+| [How to Dominate AI Search](https://arxiv.org/abs/2509.08919) (1,000 queries) | Off-page signals are out of reach (earned media 69–92%) |
+| [The Existence Gap](https://arxiv.org/abs/2601.00869) | Why bilingual publishing isn't only an SEO question |
+| [E-GEO](https://arxiv.org/abs/2511.20867) | Not a basis for any rule — records a conflicting "universal strategy" claim |
 | Google Search Central documentation | Most of L1 / L2 |
+
+Only the main entries are listed. [`watch/sources.json`](watch/sources.json) holds all 18,
+two of which have a deliberately empty `usedBy` — they record evidence conflicts, not
+grounds for any rule. Topics that were investigated and **failed** the bar live in
+[`watch/investigated.json`](watch/investigated.json) (6 so far), so nobody reruns the same
+searches without seeing why they were rejected last time.
 
 `watch/sources.json` is the machine-readable full list, checked monthly by GitHub Actions.
 

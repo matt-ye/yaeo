@@ -112,9 +112,108 @@
           "kind": "counter",
           "what": "三個否決理由：① 規則來自 LLM 對文件對比的解釋，非受控實驗；② 沒有逐條 ablation，驗的是下游改寫成效（相關性而非因果）；③ 抽出的 15–20 條規則大多不可機械檢查——「涵蓋完整」「事實正確」「語氣中立」都需要語意判斷，只有標題與清單那類結構抓得到，而那些 L2 已經有了",
           "examples": ["https://arxiv.org/abs/2510.11438"]
+        },
+        {
+          "kind": "counter",
+          "what": "**2026-08-17 補上一筆殺傷力更大的**：SAGEO Arena（arXiv 2602.12187）在更接近真實的搜尋管線裡實測 AutoGEO，檢索表現 **−36%**。也就是說問題不只是「驗證設計可疑」，而是這套做法在完整管線裡**實測有害**。同一篇也量到只改正文的策略普遍退化（Technical Terms −14%），而 AutoGEO 是其中最差的一個",
+          "examples": ["https://arxiv.org/abs/2602.12187"]
+        },
+        {
+          "kind": "counter",
+          "what": "同族還有 AgenticGEO（arXiv 2603.20213），用 MAP-Elites archive 演化策略＋Co-Evolving Critic 近似引擎回饋。同樣是「讓系統自己長出策略」，同樣沒有逐條受控驗證，摘要也沒有提供效果數字。歸在同一個否決理由下，不另開一筆",
+          "examples": ["https://arxiv.org/abs/2603.20213"]
         }
       ],
-      "recheckWhen": "出現對個別偏好規則的受控 ablation（單獨開關一條規則、其他固定），而且該條規則可以只從建置產物判定。單純換更強的模型重跑、或指標再提升，都不是理由——問題在驗證設計，不在效果大小。"
+      "recheckWhen": "出現對個別偏好規則的受控 ablation（單獨開關一條規則、其他固定），而且該條規則可以只從建置產物判定。單純換更強的模型重跑、或指標再提升，都不是理由——問題在驗證設計，不在效果大小。而且現在多一個門檻：要先說明它在完整管線裡不會像 SAGEO Arena 量到的那樣拖垮檢索。"
+    },
+    {
+      "id": "list-density-rule",
+      "topic": "新規則候選：長篇散文完全沒有清單或表格",
+      "investigated": "2026-08-17",
+      "conclusion": "no-rules",
+      "summary": [
+        "三篇不同的論文交集指向同一件事，而現行規則檢查 heading 階層卻不檢查這個。",
+        "評估後仍決定不加——不是因為證據弱，是因為它加不出一條有用的規則。"
+      ],
+      "queriesRun": [
+        "不需要新查詢：三篇都在生態掃描分頁修好後撈到的 19 篇存量裡"
+      ],
+      "evidence": [
+        {
+          "kind": "counter",
+          "what": "三篇都**沒有給閾值**：多長算長篇、幾個清單算足夠，一篇都沒說。按本 repo 的紀律，沒有閾值就只能報 info 且不給數字——而那樣它的訊號會和 L2-THIN-CONTENT 高度重疊（同一批長而扁的頁面會同時觸發兩條），只是多一條噪音。「噪音比漏報更危險」的判準在這裡指向不加",
+          "examples": [
+            "https://arxiv.org/abs/2604.19113",
+            "https://arxiv.org/abs/2602.12187",
+            "https://arxiv.org/abs/2603.09296"
+          ]
+        }
+      ],
+      "recheckWhen": "有研究給出可操作的閾值（例如「超過 N 字的頁面完全沒有清單時，引用率下降 X」），或者出現一個能與 L2-THIN-CONTENT 區分開的判準。"
+    },
+    {
+      "id": "adversarial-geo",
+      "topic": "對抗式 GEO：排序操縱攻擊與防禦",
+      "investigated": "2026-08-17",
+      "conclusion": "out-of-scope",
+      "summary": [
+        "這一整類論文問的是「怎麼騙過排序器」與「怎麼防」，不是「怎麼把內容寫好」。",
+        "與本 skill 的目的相反，不會產生規則。列在這裡只為了不用每次重新判斷。"
+      ],
+      "queriesRun": ["不需要新查詢：現行 arXiv feed 就會持續撈到這一類"],
+      "evidence": [
+        {
+          "kind": "counter",
+          "what": "MGEO（ACL 2026）用不可察覺的圖片擾動＋流暢的文字後綴操縱視覺語言模型的排序決定。它有一句話值得記：「表層內容品質不足以推升排名」——這與 what-gets-cited-2026 的『純格式改動影響極小』方向一致。但論文本身是安全研究，目的是揭露弱點讓人做防禦",
+          "examples": ["https://arxiv.org/abs/2601.12263"]
+        }
+      ],
+      "recheckWhen": "只有一種情況要回來看：某個攻擊手法揭露出「正常內容也會誤觸的判準」，那會變成誤判風險而不是規則。"
+    },
+    {
+      "id": "no-static-checkable-property",
+      "topic": "讀過但推導不出任何建置產物可判定屬性的論文",
+      "investigated": "2026-08-17",
+      "conclusion": "no-rules",
+      "summary": [
+        "這幾篇都不差，只是它們量的東西不在一份 HTML 裡：agent 路由架構、",
+        "多查詢取捨、站外聲量、產業自有平台的推薦系統。",
+        "集中記一筆，避免每篇各開一條卻寫同一個理由。"
+      ],
+      "queriesRun": ["不需要新查詢：均來自生態掃描的 19 篇存量"],
+      "evidence": [
+        {
+          "kind": "counter",
+          "what": "2604.03656（Beyond Retrieval）：講語意熵漂移與 Deterministic Agent Handoff，改的是 agent 路由架構，並在工業產品上把垂直任務幻覺降到接近零。沒有頁面層級的可判定屬性",
+          "examples": ["https://arxiv.org/abs/2604.03656"]
+        },
+        {
+          "kind": "counter",
+          "what": "2601.13938（IF-GEO）：處理「一份文件要同時服務多個查詢意圖」的衝突取捨。它的 risk-aware stability 指標需要拿多個查詢去實跑，不是靜態判定",
+          "examples": ["https://arxiv.org/abs/2601.13938"]
+        },
+        {
+          "kind": "counter",
+          "what": "2602.02961（Pinterest）：產業案例，20% 自然流量成長、帶動數百萬 MAU。但做法是用微調的視覺語言模型預測使用者會搜什麼、再把圖片聚成可索引的集合頁——那是自有平台的推薦系統工程，靜態站台沒有對應物，也不是受控實驗",
+          "examples": ["https://arxiv.org/abs/2602.02961"]
+        },
+        {
+          "kind": "counter",
+          "what": "2603.12282（UK iGaming）：earned media 效應與合規訊號當作權威乘數。是 ai-search-earned-media-2026 的複製，方向一致但摘要沒有數字。站外訊號，檢核器碰不到",
+          "examples": ["https://arxiv.org/abs/2603.12282"]
+        },
+        {
+          "kind": "counter",
+          "what": "2601.16858（Navigating the Shift）：與 ai-search-earned-media-2026 同一組作者的姊妹篇（EDBT/ICDT 2026 Workshops），具體數字在後者，這篇不另外採用",
+          "examples": ["https://arxiv.org/abs/2601.16858"]
+        },
+        {
+          "kind": "counter",
+          "what": "2507.03169（Beyond SEO，BART 微調）：1,905 筆**合成**旅遊內容配對訓練，用單一評審模型（Llama-3.3-70B）評估，主要指標是回答中的字數（+15.63% 絕對字數、+30.96% 位置調整字數）。它宣稱有效的屬性（可信引用、統計證據、語言流暢）就是 KDD 2024 的五戰術，沒有新增依據，而驗證設計比原論文弱",
+          "examples": ["https://arxiv.org/abs/2507.03169"]
+        }
+      ],
+      "recheckWhen": "其中任一篇出現「只看建置產物就能判定」的後續研究時，單獨拉出來另開一筆。"
     }
   ]
 }

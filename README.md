@@ -200,6 +200,45 @@ GitHub Pages **全部**預設支援 clean URL——而它是 **error** 級。
 
 ---
 
+## 這支腳本碰不到什麼
+
+一份檢核報告最容易造成的誤解，是讓人以為「全綠＝做完了」。所以這裡把
+天花板寫清楚。三件事都有出處，而且都在這支腳本的視野之外。
+
+**① 大多數引用失敗是語意問題。**
+[arXiv 2603.09296](https://arxiv.org/abs/2603.09296) 把引用失敗分成四類，
+在它的樣本裡：技術完整性 10.1%、**語意對齊 62.2%**、內容品質 27.1%、
+系統性排除 0.6%。佔比最大的那一類——意圖分歧、脈絡缺口、資訊過時——
+需要知道使用者想搜什麼、競爭對手寫了什麼，**都不在一份 HTML 裡**。
+（這些百分比是該篇樣本的分佈，不是普世常數。）
+
+**② 站外訊號，而且它可能比站內更重要。**
+[arXiv 2509.08919](https://arxiv.org/abs/2509.08919)（1,000 個查詢、四個引擎）
+量到 AI 搜尋對第三方來源的壓倒性偏好：消費電子 92.1%、軟體 74.2%、
+汽車 69.1%，而 social 內容在兩個領域是 **0%**。
+[另一篇](https://arxiv.org/abs/2601.00912)發現有預測力的是 referring domains
+（+0.319）與社群聲量（+0.395），**GEO 分數與被發現率零相關**。
+
+**這份報告全過，仍然可能因為沒有第三方報導而不被引用。**
+
+**③ 訓練語料圈。**
+[arXiv 2601.00869](https://arxiv.org/abs/2601.00869) 發現決定品牌能不能被推薦的是
+**訓練資料的地理來源，不是查詢語言**：同樣的英文查詢，中文 LLM 品牌提及率
+88.9%、國際模型 58.3%；案例品牌在中文 LLM 65.6%、國際模型 **0%**。
+這給雙語一個 SEO 之外的理由——出英文版是進入另一個訓練語料圈——
+但語料收錄不在建置產物裡，檢核器看不到。
+
+> 反過來說，**站內這一段是有實測支持的**。
+> [arXiv 2602.12187](https://arxiv.org/abs/2602.12187)（SAGEO Arena）把
+> title／description／H1–H6／JSON-LD 當成分開索引的欄位，比較「只優化結構欄位」
+> 與「只優化正文」：前者 **+22% Hit Rate、檢索排名 +2.72**，後者一致退化
+> （其中一套自動改寫方法讓檢索掉 **36%**）。
+>
+> 這值得標出來，因為[綜述](https://arxiv.org/abs/2607.14035)說 GEO 的證據
+> 碰不到「會不會被撈到」。這篇碰到了，而且量的正是 L1／L2 在檢查的東西。
+
+---
+
 ## 出處
 
 | 來源 | 用在哪 |
@@ -208,13 +247,21 @@ GitHub Pages **全部**預設支援 clean URL——而它是 **error** 級。
 | [GEO: Generative Engine Optimization](https://arxiv.org/abs/2311.09735)（Aggarwal et al., KDD 2024，現為 v3） | 五戰術與 `L3-GEO-*` |
 | [A Critical Survey of GEO (2023-2026)](https://arxiv.org/abs/2607.14035)（回顧 45 篇） | `L3-GEO-*` 的證據強度限定 |
 | [What Gets Cited](https://arxiv.org/abs/2605.25517)（252,000 次試驗） | `L3-GEO-*` 為何不給目標數字 |
+| [SAGEO Arena](https://arxiv.org/abs/2602.12187)（結構欄位 +22% Hit Rate） | L1／L2 在檢索階段的實測支持 |
+| [FeatGEO](https://arxiv.org/abs/2604.19113)（13 維特徵、有 ablation） | `L3-GEO-*` 三項訊號的逐特徵消融 |
 | [Diagnosing and Repairing Citation Failures](https://arxiv.org/abs/2603.09296) | 靜態檢核的天花板；不執行 JS 的旁證 |
 | [The Discovery Gap](https://arxiv.org/abs/2601.00912)（112 個新創、2,240 次查詢） | 四層的排序；LLMO 0 條的第四條證據 |
+| [How to Dominate AI Search](https://arxiv.org/abs/2509.08919)（1,000 個查詢） | 站外訊號碰不到（earned media 69–92%） |
+| [The Existence Gap](https://arxiv.org/abs/2601.00869) | 為什麼雙語不只是 SEO 問題 |
 | Google Search Central 官方文件 | L1／L2 多數規則 |
 
-只列主要的幾筆。`watch/sources.json` 有 12 筆完整紀錄，其中 [`geo-sfe-2026`](https://arxiv.org/abs/2603.29979)
-的 `usedBy` 刻意留空——它記錄的是一個證據衝突，不是任何規則的依據。
-沒通過門檻的主題另存在 [`watch/investigated.json`](watch/investigated.json)。
+只列主要的幾筆。[`watch/sources.json`](watch/sources.json) 有 18 筆完整紀錄，其中兩筆的
+`usedBy` **刻意留空**——[`geo-sfe-2026`](https://arxiv.org/abs/2603.29979) 與
+[`e-geo-2026`](https://arxiv.org/abs/2511.20867) 記錄的是證據衝突，不是任何規則的依據。
+
+查證過但**沒通過門檻**的主題另存在 [`watch/investigated.json`](watch/investigated.json)
+（目前 6 筆）。那份檔案的用途是不要重複搜：沒通過的東西如果不寫下來，
+下一個人會把同一輪搜尋再跑一次，而且看不到上次否決的理由。
 
 `watch/sources.json` 是機器可讀的完整清單，由 GitHub Actions 每月檢查是否失效。
 

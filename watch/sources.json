@@ -144,6 +144,61 @@
       "watch": "version",
       "quote": "Single observations of AI visibility are misleading and risk over- or underestimating true brand presence",
       "note": "四個引擎、45–46 天每日量測：來源集合的日間 Jaccard 僅 0.34–0.42（每天約 65% 的來源會換掉）、RBO 0.21–0.26；同一天內同時重跑，來源 Jaccard 也只有 0.32–0.43。作者建議品牌可見度至少 7 runs/prompt/日、來源覆蓋至少 8 runs、觀測窗 2–4 週滾動。不產生任何規則——它需要動態查詢與統計，本檢核器只讀建置產物。用途是替「不檢核實際排名與收錄狀態」這條邊界提供有出處的理由，並且明講這支腳本自己也不該假裝能量測 AI 可見度。"
+    },
+    {
+      "id": "sageo-arena-2026",
+      "name": "SAGEO Arena: A Realistic Environment for Evaluating Search-Augmented Generative Engine Optimization",
+      "version": "arXiv 2602.12187",
+      "url": "https://arxiv.org/abs/2602.12187",
+      "usedBy": [
+        "L1-TITLE-* / L1-DESC-* 的證據補強",
+        "L2-HEADING-* 的證據補強",
+        "L2-JSONLD-* 的證據補強",
+        "investigated.json 的 autogeo 否決理由"
+      ],
+      "watch": "version",
+      "quote": "Existing approaches remain largely impractical under realistic conditions and often degrade performance in retrieval and reranking",
+      "note": "**這是目前唯一量測到「這批欄位本身」在檢索階段有效的研究。** 它把 structural information 定義成 title／meta description／H1–H6／schema-JSON-LD／body 並分開索引（照真實搜尋引擎做法）。只優化結構欄位 vs 只優化正文：+22% Hit Rate、平均檢索排名 +2.72；只改正文的既有方法一致退化（Technical Terms −14%、AutoGEO −36%）。意義：綜述（geo-survey-2026）說 GEO 證據未證實「自然可發現性」，也就是碰不到「會不會被撈到」——這篇碰到了，而且量的是 L1／L2 已經在檢查的東西。原本這些規則只有 Google 官方文件（『應該這樣做』），現在多一個管線內實測。⚠ 仍不改任何嚴重度：它比較的是兩種優化策略，不是「缺這個欄位會怎樣」。"
+    },
+    {
+      "id": "featgeo-2026",
+      "name": "Think Before Writing: Feature-Level Multi-Objective Optimization for Generative Citation Visibility（FeatGEO）",
+      "version": "arXiv 2604.19113",
+      "url": "https://arxiv.org/abs/2604.19113",
+      "usedBy": ["L3-GEO-SIGNALS-* 所數的三項訊號的逐特徵 ablation"],
+      "watch": "version",
+      "quote": "citation behavior is more strongly influenced by document-level content properties than by isolated lexical edits",
+      "note": "13 維特徵空間（structure：has_intro_summary／headings_level／list_density／length_level；content：statistics_level／cite_sources_level／quotation_level／unique_info_level／technical_terms_level；language：authoritative／easy_to_understand／fluency／keyword_focus），而且**做了 ablation**：貢獻 substantial 的是 Statistics 與 Cite Sources，minimal 的是 Technical Terms，content 特徵主導。L3-GEO-SIGNALS-* 數的正是外部引用網域數、統計數據處數、直接引言處數——其中兩項就是 ablation 裡最強的兩項。這補上了 SKILL.md 原本註明缺的那個 ablation。⚠ 嚴重度仍不變：FeatGEO 一樣沒有給閾值，所以 info＋不給數字的做法照舊。另外它報告效果「因領域而異」（topic-dependent），這一點站在綜述那邊、反對 e-geo-2026 的『普遍策略』主張。"
+    },
+    {
+      "id": "ai-search-earned-media-2026",
+      "name": "Generative Engine Optimization: How to Dominate AI Search",
+      "version": "arXiv 2509.08919",
+      "url": "https://arxiv.org/abs/2509.08919",
+      "usedBy": ["〈已知限制〉：站外訊號碰不到", "為什麼「本檢核器全過」不等於會被引用"],
+      "watch": "version",
+      "quote": "AI Search exhibit a systematic and overwhelming bias towards Earned media (third-party, authoritative sources) over Brand-owned and Social content",
+      "note": "1,000 個消費類排序查詢（10 類 × 100）、US 與 CA 兩區、四個引擎（Claude／Perplexity／Gemini／GPT）。AI 搜尋結果中第三方來源佔比：汽車 CA 69.1%（brand 30.9%、social 0%）、消費電子 US 92.1%、軟體 CA 74.2%（social 0%），Google 對照組的 brand 佔比高得多。另有跨語言穩定性測試（100 查詢 × 10 領域 × 5 語言＋英文）：Claude 跨語言重疊高、GPT 低於 Google、Google 只有 0–0.1，也就是不同引擎會依語言切換整個站台生態。用途是誠實界定範圍：這些是站外訊號，本檢核器只讀單一站台的建置產物，全過也可能因為沒有第三方報導而不被引用。姊妹篇 arXiv 2601.16858 是同一組作者，數字在本篇。"
+    },
+    {
+      "id": "existence-gap-2026",
+      "name": "Cultural Encoding in Large Language Models: The Existence Gap in AI-Mediated Brand Discovery",
+      "version": "arXiv 2601.00869",
+      "url": "https://arxiv.org/abs/2601.00869",
+      "usedBy": ["為什麼 hreflang／雙語不只是 SEO 問題", "〈已知限制〉：訓練語料圈碰不到"],
+      "watch": "version",
+      "quote": "brands absent from LLM training corpora lack 'existence' in AI responses regardless of quality",
+      "note": "驅動因素是**訓練資料的地理來源，不是查詢語言**——用同樣的英文查詢，中文 LLM 的品牌提及率 88.9% vs 國際模型 58.3%（差 30.6 個百分點，p<.001）；案例品牌在中文 LLM 65.6%、國際模型 0%（p<.001）。對雙語站的意義：出英文版不只是 SEO，是進入另一個訓練語料圈，這給 L1-HREFLANG-* 那批規則一個原本沒有的理由。⚠ 不新增規則：語料收錄與否不在建置產物裡，檢核器看不到。"
+    },
+    {
+      "id": "e-geo-2026",
+      "name": "E-GEO: A Testbed for Generative Engine Optimization in E-Commerce",
+      "version": "arXiv 2511.20867",
+      "url": "https://arxiv.org/abs/2511.20867",
+      "usedBy": [],
+      "watch": "version",
+      "quote": "optimized prompts reveal a stable, domain-agnostic pattern, suggesting the existence of a 'universally effective' GEO strategy",
+      "note": "usedBy 刻意留空——**與 geo-sfe-2026 同樣是衝突紀錄，不是任何規則的依據。** 它主張存在「普遍有效的 GEO 策略」，牴觸 geo-survey-2026 的「通用啟發法轉移性差」。featgeo-2026 報告效果因領域而異，站綜述那邊，所以目前是 2 比 1。留著是為了下次有人引用 E-GEO 主張「有一套通用做法」時，反面那兩篇已經在檔案裡。"
     }
   ]
 }
