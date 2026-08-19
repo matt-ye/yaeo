@@ -5,8 +5,21 @@
   "install": "github.com/matt-ye/yaeo",
   "summary": "YAEO — 把「網站對搜尋引擎與 AI 引擎的可見度」變成可逐條檢查、每條都附出處的東西。四層檢核、59 條規則、零相依。",
   "category": "Web Development",
-  "tags": ["seo", "aeo", "geo", "llmo", "claude-code", "agent-skill", "i18n", "static-site"],
-  "price": { "amount": 0, "currency": "USD", "checkoutUrl": "" },
+  "tags": [
+    "seo",
+    "aeo",
+    "geo",
+    "llmo",
+    "claude-code",
+    "agent-skill",
+    "i18n",
+    "static-site"
+  ],
+  "price": {
+    "amount": 0,
+    "currency": "USD",
+    "checkoutUrl": ""
+  },
   "assets": {
     "brand": {
       "name": "YAEO",
@@ -57,6 +70,11 @@
           "type": "feature",
           "title": "這支工具<br>碰不到什麼",
           "text": "AI 回答時引用的來源，七到九成來自「別人寫你」的第三方報導，不是你自己的網站。還有研究發現，各種 GEO 分數跟實際有沒有被找到，完全沒有相關。所以：我們的報告全綠，你還是可能因為沒人報導過你而不被引用。這句話寫在自家工具的說明裡不好看，但不寫更糟。"
+        },
+        {
+          "type": "feature",
+          "title": "修完之後<br>怎麼知道有效？",
+          "text": "重跑一次、訊息消失，很容易被當成有效果——但那只代表「你的網頁改掉了」。大多數項目可以再往下追：過幾天到幾週，Search Console 會反映出來。但 AI 引用那一類不行，實測 AI 回答的來源每天約 65% 會換掉，改完再查一次看到的是雜訊。所以報告會直接寫「這一類你驗不了」，而不是給你一個看起來很負責的假驗法。"
         },
         {
           "type": "cta",
