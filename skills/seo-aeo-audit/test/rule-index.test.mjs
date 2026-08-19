@@ -159,6 +159,35 @@ const unlisted = testFiles.filter((f) => !listedTests.includes(f));
 check(unlisted.length === 0, `SKILL.md 列出了全部 ${testFiles.length} 支測試`,
   `      未列出：${unlisted.join('、')}`);
 
+/*
+ * 每條規則都要有「修完怎麼確認」的層級。
+ *
+ * 這一段的存在理由值得寫下來。claude-seo（AgriciDaniel/claude-seo）的 README
+ * 宣稱「每條建議都帶可證偽檢查」，實測 grep 它的 schema／tests／scripts —— 零命中。
+ * 那個要求只寫在給模型看的提示詞裡，沒有任何機制保證欄位真的出現。
+ *
+ * **我們要做同一件事，就得先解決它沒解決的那一半。** 所以驗證層級不是寫在
+ * 文件裡的期望，而是這裡的斷言：新增規則卻沒歸類，測試失敗並指名。
+ *
+ * 從原始碼解析 VERIFY_TIERS 而不是 import：檢核器是靠 argv 執行的腳本，
+ * 不是模組。為了測試把它拆成模組是可以，但那會為了測試改變產品結構——
+ * 解析原始碼比較醜，卻不動到被測對象。
+ */
+const tiersBlock = src.match(/const VERIFY_TIERS = \[([\s\S]*?)\];/);
+const tierPatterns = tiersBlock
+  ? [...tiersBlock[1].matchAll(/match:\s*\/([^/]+)\//g)].map((m) => new RegExp(m[1]))
+  : [];
+const unclassified = [...emitted].filter((c) => !tierPatterns.some((re) => re.test(c))).sort();
+check(tierPatterns.length > 0 && unclassified.length === 0,
+  `每條規則都歸到了驗證層級（${tierPatterns.length} 條樣式涵蓋 ${emitted.size} 條規則）`,
+  tierPatterns.length === 0
+    ? '      找不到 VERIFY_TIERS——被改名或刪掉了？守衛要一起更新'
+    : `      未歸類：${unclassified.join('、')}`);
+
+/* 層級的說明文字也要在 SKILL.md 講清楚，否則使用者只看得到報告尾巴那兩行 */
+check(/修完怎麼確認|驗證層級/.test(skill), 'SKILL.md 有說明驗證層級',
+  '      SKILL.md 找不到〈修完怎麼確認〉那一節');
+
 if (templated.length) {
   console.log(`\nℹ 有 ${templated.length} 處代碼由樣板字串組成，無法靜態展開，請人工確認已列入索引：`);
   [...new Set(templated)].forEach((t) => console.log(`     ${t}`));

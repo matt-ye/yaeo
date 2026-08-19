@@ -47,6 +47,37 @@ const MIN_INTERNAL_LINKS = 1; // 出站內部連結為 0 ＝ 孤島頁
 const cjkRatio = (s) => (s.match(/[㐀-鿿豈-﫿]/g) || []).length / Math.max(s.length, 1);
 const limitsFor = (s) => (cjkRatio(s) > 0.3 ? LIMITS_CJK : LIMITS_EN);
 
+// ── 修完怎麼確認 ────────────────────────────────────────
+/*
+ * 這份報告原本只回答「哪裡不對」，不回答「修了怎麼知道有效」。
+ * 使用者實際會做的事是重跑腳本、看訊息消失——**然後把那當成有效果**。
+ *
+ * 那是兩件事：
+ *   ① 訊息消失 ＝ 建置產物裡的事實已經改掉。所有規則都適用，確定性的。
+ *   ② 有沒有效果 ＝ 搜尋引擎／AI 的行為有沒有變。**這一層要分規則。**
+ *
+ * 把兩者混為一談是這支腳本原本默許的誤解，現在明講。
+ *
+ * ⚠ 為什麼 L3-GEO 那格寫「驗不了」而不是給一個驗法：
+ * arXiv 2604.07585 在四個引擎上跑 45–46 天，來源集合的日間 Jaccard 只有
+ * 0.34–0.42（每天約 65% 的來源會換掉）；同一天內同時重跑也只有 0.32–0.43。
+ * 作者建議至少 7 runs/prompt/日、觀測窗 2–4 週。
+ * **在那種雜訊水準下，給一個「改完再查一次」的驗法就是在教人做錯的量測。**
+ * 誠實的答案是「你驗不了」——而那比一個假的驗法有用。
+ *
+ * ⚠ 順序有意義：先比對的優先，`L3-GEO-` 必須排在通用的 `L3-` 之前，
+ * 否則 GEO 那組會被歸到確定性那一層，正好是這段要避免的錯誤。
+ */
+const VERIFY_TIERS = [
+  { match: /^L3-GEO-/, tier: 'no-single-shot' },
+  { match: /^(L1|L2|L3|SITE)-/, tier: 'rerun-then-console' },
+];
+const tierOf = (code) => (VERIFY_TIERS.find((t) => t.match.test(code)) || {}).tier;
+const TIER_TEXT = {
+  'rerun-then-console': '重跑本腳本可確認事實已改。但**那不等於有效果**——要看效果請用 Search Console 的收錄與爬取資料（有延遲，數天到數週）。',
+  'no-single-shot': '重跑本腳本只證明訊號補上了。**效果無法用單次量測驗證**：實測 AI 搜尋的來源每天約 65% 會換掉（arXiv 2604.07585），要看效果至少 7 次/日、觀測 2–4 週。這幾條本來就只報 info、不給目標數字，理由相同。',
+};
+
 // ── 收集檔案 ────────────────────────────────────────────
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -1035,7 +1066,14 @@ const counts = { error: 0, warn: 0, info: 0 };
 allFindings.forEach((f) => counts[f.level]++);
 
 if (AS_JSON) {
-  console.log(JSON.stringify({ scanned: htmlFiles.length, counts, findings: allFindings }, null, 2));
+  /* verify 只列本次真的出現的層級——沒觸發的規則講怎麼驗證是噪音 */
+  const tiers = [...new Set(allFindings.map((f) => tierOf(f.code)).filter(Boolean))];
+  const verify = Object.fromEntries(tiers.map((t) => [t, TIER_TEXT[t]]));
+  console.log(JSON.stringify({
+    scanned: htmlFiles.length, counts,
+    findings: allFindings.map((f) => ({ ...f, verify: tierOf(f.code) })),
+    verify,
+  }, null, 2));
 } else {
   console.log(`\nSEO/AEO 檢核：${htmlFiles.length} 頁　${counts.error} error / ${counts.warn} warn / ${counts.info} info\n`);
   const byCode = new Map();
@@ -1052,6 +1090,18 @@ if (AS_JSON) {
     console.log(`  ${variants.size > 1 ? '例：' : ''}${list[0].msg}`);
     const pages = list.map((x) => x.page).filter((p) => p !== '(site)');
     if (pages.length) console.log(`  → ${pages.slice(0, 5).join(', ')}${pages.length > 5 ? ` …等 ${pages.length} 頁` : ''}`);
+    console.log('');
+  }
+  /* 放在逐條清單之後、而不是每條訊息裡：每條都掛一句驗證法會讓報告變成兩倍長，
+     而「怎麼驗」是看完全部才要想的事，不是逐條要想的事。 */
+  const tiers = [...new Set(allFindings.map((f) => tierOf(f.code)).filter(Boolean))];
+  if (tiers.length) {
+    console.log('修完怎麼確認');
+    console.log('  訊息消失只代表「建置產物裡的事實改了」，不代表有效果。這兩件事分開看：\n');
+    for (const t of tiers) {
+      const label = t === 'no-single-shot' ? 'L3-GEO-*' : '其餘各層';
+      console.log(`  · ${label}：${TIER_TEXT[t].replace(/\*\*/g, '')}`);
+    }
     console.log('');
   }
   console.log('L3 部分項目與 L4（YMYL/E-E-A-T）需人工判讀，見 SKILL.md。\n');
