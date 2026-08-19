@@ -948,7 +948,18 @@ function auditSite(pages, root) {
   // 站層級標準檔（L3 AEO 的機械可判定部分）
   if (!existsSync(join(root, 'robots.txt'))) add('error', 'SITE-ROBOTS-MISSING', '沒有 robots.txt');
   if (!existsSync(join(root, 'sitemap-index.xml')) && !existsSync(join(root, 'sitemap.xml'))) add('error', 'SITE-SITEMAP-MISSING', '沒有 sitemap');
-  if (!existsSync(join(root, 'llms.txt'))) add('info', 'SITE-LLMSTXT-MISSING', '沒有 llms.txt（Google 明言不使用；成本低可放，但別期待排名效果）');
+  /* llms.txt 的證據在 2026-08-18 大幅補強，而且結論比原本細緻。
+     四份獨立實測都指向「幾乎沒人讀」：Ahrefs 掃 137,210 個網域，有放的
+     檔案 97% 整個月零抓取；SE Ranking 約 30 萬網域找不到與被引用的關聯；
+     OtterlyAI 90 天日誌只有 84/62,100 次 AI bot 請求打它。
+
+     但同一份 Ahrefs 資料裡有一個例外值得講：在少數真的被抓的檔案中，
+     **編碼代理的抓取量超過所有 AI 檢索、助理與訓練爬蟲**，其中 Claude Code
+     最多。這與 Mueller 說 llms.txt 適合當「編碼代理的參考資料」一致。
+
+     所以訊息刻意分成兩句：對誰沒用、對誰有用。檢核器看不出站台屬性，
+     這個判斷只能交給讀報告的人——但要給他判斷所需的事實。 */
+  if (!existsSync(join(root, 'llms.txt'))) add('info', 'SITE-LLMSTXT-MISSING', '沒有 llms.txt。Google 明言 Search 不使用，且實測放了也幾乎沒人讀（Ahrefs 137,210 網域：97% 零抓取）。唯一在數據上明顯的消費端是編碼代理——若你的讀者會用 Cursor／Claude Code 之類的工具讀你的文件，這個檔有實際用途；否則可略過');
   const rssNames = ['rss.xml', 'feed.xml', 'atom.xml', 'index.xml'];
   if (!rssNames.some((n) => existsSync(join(root, n)))) add('warn', 'SITE-RSS-MISSING', '沒有 RSS feed');
 

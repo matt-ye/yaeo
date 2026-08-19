@@ -189,13 +189,15 @@ widen the rule until it stops firing, and the report looks fixed. So every test 
 **one genuinely reportable case** in each scenario and asserts that exactly that one is
 reported — under-reporting and over-reporting both fail.
 
-The three rules that have tests each went wrong differently:
+The five things that have tests each went wrong differently:
 
 | Rule | What went wrong |
 |---|---|
 | `SITE-DEAD-INTERNAL-LINK` | Misfired in bulk on clean-URL hosts, at **error** level |
 | `L2-BILINGUAL-CONCAT` | The number was always right, but it **merged two situations with completely different fixes** |
 | `L1-LANG-CONTENT-MISMATCH` | Its criterion is deliberately **asymmetric** — the kind of thing someone later "tidies up" into symmetry |
+| `L2-I18N-DICT-*` | "The English field contains Chinese" — **any is-it-filled-in check passes it**, so only comparing the values works |
+| The rule index and the counts in the docs | Claimed to be complete while missing 4 rules; section headings and source counts each drifted later |
 
 The two situations `L2-BILINGUAL-CONCAT` was merging:
 
@@ -330,9 +332,10 @@ number; L4 is left to a human.
 | [How to Dominate AI Search](https://arxiv.org/abs/2509.08919) (1,000 queries) | Off-page signals are out of reach (earned media 69–92%) |
 | [The Existence Gap](https://arxiv.org/abs/2601.00869) | Why bilingual publishing isn't only an SEO question |
 | [E-GEO](https://arxiv.org/abs/2511.20867) | Not a basis for any rule — records a conflicting "universal strategy" claim |
+| [Ahrefs llms.txt study](https://ahrefs.com/blog/llmstxt-study/) (137,210 domains) | 97% of llms.txt files never fetched; coding agents the one visible consumer |
 | Google Search Central documentation | Most of L1 / L2 |
 
-Only the main entries are listed. [`watch/sources.json`](watch/sources.json) holds all 19,
+Only the main entries are listed. [`watch/sources.json`](watch/sources.json) holds all 23,
 two of which have a deliberately empty `usedBy` — they record evidence conflicts, not
 grounds for any rule. Topics that were investigated and **failed** the bar live in
 [`watch/investigated.json`](watch/investigated.json) (6 so far), so nobody reruns the same

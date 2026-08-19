@@ -155,8 +155,35 @@ Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 10
 
 （`Google-Extended` 的作用範圍隨 Google 政策調整過，設定前回查官方文件當日說明。）
 
-**llms.txt**：Google [官方明確表示不使用它](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide)（逐字聲明見文末「出處」）。成本是幾分鐘，放無妨，
-但**不要期待排名或引用率提升**，也不要在提案裡把它講成必做項。
+**llms.txt**：Google [官方明確表示不使用它](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide)（逐字聲明見文末「出處」）。
+
+**2026-08-18 補上三份實測，結論比原本細緻。** 原本只寫「放無妨、別期待效果」，
+現在說得更準——先看它多沒用，再看它對誰有用：
+
+| 研究 | 樣本 | 結果 |
+|---|---|---|
+| [Ahrefs](https://ahrefs.com/blog/llmstxt-study/) | 137,210 網域（2026-05） | 有放的檔案 **97% 整個月零抓取** |
+| [SE Ranking](https://seranking.com/blog/llms-txt/) | 約 30 萬網域 | 與被引用頻率**找不到關聯**；採用率 10.13% |
+| [OtterlyAI](https://otterly.ai/blog/the-llms-txt-experiment/) | 單站 90 天日誌 | AI bot 請求 62,100+ 次，只有 **84 次**打它（0.1%） |
+
+三份的方法不同（爬取普查／關聯分析／伺服器日誌），結論同方向。
+**不同方法得到同方向結論，比同方法重複更有價值。**
+
+**但同一份 Ahrefs 資料裡有一個例外，而且它推翻了「純防禦性」這個講法：**
+在少數真的被抓取的檔案中，**編碼代理的抓取量超過所有 AI 檢索爬蟲、AI 助理
+與訓練爬蟲**，其中 Claude Code 最多。該研究並指出這與 John Mueller 說
+llms.txt 適合當「編碼代理的參考資料」一致（⚠ Mueller 該說法**經 Ahrefs 轉述**，
+未直接查證原始出處）。
+
+所以判準是**看你的讀者是誰**：
+
+- 讀者會用 Cursor／Claude Code 之類的工具讀你的文件 → **有實際、可量測的用途**
+- 一般商業網站 → 放了幾乎不會有人讀，別在提案裡把它講成必做項
+
+⚠ 這一段是從 [claude-seo](https://github.com/AgriciDaniel/claude-seo) 的 llms.txt
+證據檔得到線索後**自己回查原始研究**才寫的。它那份檔案主張編碼代理會消費
+llms.txt 但**沒有附出處**；回查之後發現主張成立，而且可引的樣本比它引的更大。
+**線索可以來自別人，出處必須自己查。**
 
 #### 頁層級（可引用性）
 
@@ -632,7 +659,7 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 | `SITE-LANG-INCONSISTENT` | warn | 同一語言用了多種寫法（`zh-TW` 與 `zh-Hant` 混用）。**不是「站上有多種語言」**——那是雙語站該有的樣子 |
 | `SITE-DEAD-INTERNAL-LINK` | error | 站內連結指向不存在的路徑。**會處理 clean URL 與百分比編碼**（見〈已知限制〉） |
 | `SITE-RSS-MISSING` | warn | 沒有 RSS feed——那是 LLM 抓內容的常用管道 |
-| `SITE-LLMSTXT-MISSING` | info | 沒有 `llms.txt`。**證據弱**：尚無搜尋引擎官方表態支持 |
+| `SITE-LLMSTXT-MISSING` | info | 沒有 `llms.txt`。Google 明言不使用，且實測 97% 的檔案零抓取；**唯一在數據上明顯的消費端是編碼代理**，所以判準是「你的讀者用不用 Cursor／Claude Code」 |
 | `SITE-AI-POLICY` | info | robots.txt 對 AI 爬蟲的分流現況（擋訓練／開放檢索各幾支） |
 | `SITE-AI-CRAWLER-UNSPECIFIED` | info | 有 AI 爬蟲未被明確允許或拒絕 |
 | `SITE-AI-RETRIEVAL-BLOCKED` | error | 擋掉了**檢索型**爬蟲——那會讓 AI 回答時無法引用本站 |
@@ -662,6 +689,8 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 | [Google robots.txt 規範](https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt) | `SITE-ROBOTS-*`、`SITE-AI-*` |
 | [Google 結構化資料總覽](https://developers.google.com/search/docs/appearance/structured-data/search-gallery) | `L2-JSONLD-*`、`L2-ARTICLE-*` |
 | [Google AI 功能與你的網站](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) | `SITE-LLMSTXT-MISSING` 的措辭 |
+| [Ahrefs llms.txt 研究](https://ahrefs.com/blog/llmstxt-study/)（137,210 網域） | llms.txt 97% 零抓取；編碼代理是唯一明顯消費端 |
+| [SE Ranking](https://seranking.com/blog/llms-txt/)（約 30 萬網域）／[OtterlyAI](https://otterly.ai/blog/the-llms-txt-experiment/)（90 天日誌） | 同上，方法不同、結論同向 |
 
 最後一條的逐字聲明（段落「Mythbusting generative AI search: what you don't need to do」）：
 

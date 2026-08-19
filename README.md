@@ -173,13 +173,15 @@ GitHub Pages **全部**預設支援 clean URL——而它是 **error** 級。
 報告上看起來就像修好了，誤判確實消失了。所以每個測試都在各情境**埋一條真的
 該報的**，斷言「只報這一條」——少報和多報都會失敗。
 
-目前有測試的三條，各自出過不同的事：
+目前有測試的五項，各自出過不同的事：
 
 | 規則 | 出過什麼事 |
 |---|---|
 | `SITE-DEAD-INTERNAL-LINK` | 在 clean URL 主機上整批誤判，而它是 **error** 級 |
 | `L2-BILINGUAL-CONCAT` | 數字一直是對的，但**把兩種修法完全不同的狀況混在一起** |
 | `L1-LANG-CONTENT-MISMATCH` | 判準刻意**不對稱**，最容易被後人「順手改成對稱」 |
+| `L2-I18N-DICT-*` | 「英文欄位裡是中文」——**任何「有沒有填」的檢查都會判它通過**，只能比對值本身 |
+| 〈完整規則索引〉與文件計數 | 宣稱「一條不漏」卻漏 4 條；之後小節標題、出處筆數也各漂過一次 |
 
 `L2-BILINGUAL-CONCAT` 混在一起的是這兩種：
 
@@ -291,9 +293,10 @@ L4 交給人判讀。
 | [The Discovery Gap](https://arxiv.org/abs/2601.00912)（112 個新創、2,240 次查詢） | 四層的排序；LLMO 0 條的第四條證據 |
 | [How to Dominate AI Search](https://arxiv.org/abs/2509.08919)（1,000 個查詢） | 站外訊號碰不到（earned media 69–92%） |
 | [The Existence Gap](https://arxiv.org/abs/2601.00869) | 為什麼雙語不只是 SEO 問題 |
+| [Ahrefs llms.txt 研究](https://ahrefs.com/blog/llmstxt-study/)（137,210 網域） | llms.txt 97% 零抓取；編碼代理是唯一明顯消費端 |
 | Google Search Central 官方文件 | L1／L2 多數規則 |
 
-只列主要的幾筆。[`watch/sources.json`](watch/sources.json) 有 19 筆完整紀錄，其中兩筆的
+只列主要的幾筆。[`watch/sources.json`](watch/sources.json) 有 23 筆完整紀錄，其中兩筆的
 `usedBy` **刻意留空**——[`geo-sfe-2026`](https://arxiv.org/abs/2603.29979) 與
 [`e-geo-2026`](https://arxiv.org/abs/2511.20867) 記錄的是證據衝突，不是任何規則的依據。
 
