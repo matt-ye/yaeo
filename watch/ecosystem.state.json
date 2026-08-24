@@ -14,6 +14,7 @@
       "2026-03-31-Inside-Googlebot:-demystifying-crawling,-fetching,-and-the-bytes-we-process"
     ],
     "arxiv-geo": [
+      "http://arxiv.org/abs/2608.16824v2",
       "http://arxiv.org/abs/2608.11390v1",
       "http://arxiv.org/abs/2607.20730v1",
       "http://arxiv.org/abs/2607.14035v1",
@@ -33,7 +34,26 @@
       "http://arxiv.org/abs/2605.09314v1",
       "http://arxiv.org/abs/2604.27790v1",
       "http://arxiv.org/abs/2604.25707v2",
-      "http://arxiv.org/abs/2604.19516v1"
+      "http://arxiv.org/abs/2604.19516v1",
+      "http://arxiv.org/abs/2604.19113v1",
+      "http://arxiv.org/abs/2604.07585v1",
+      "http://arxiv.org/abs/2604.03656v1",
+      "http://arxiv.org/abs/2603.29979v1",
+      "http://arxiv.org/abs/2603.09296v1",
+      "http://arxiv.org/abs/2603.12282v1",
+      "http://arxiv.org/abs/2603.20213v1",
+      "http://arxiv.org/abs/2602.12187v2",
+      "http://arxiv.org/abs/2602.02961v1",
+      "http://arxiv.org/abs/2601.16858v2",
+      "http://arxiv.org/abs/2601.13938v1",
+      "http://arxiv.org/abs/2601.12263v2",
+      "http://arxiv.org/abs/2601.00912v1",
+      "http://arxiv.org/abs/2601.00869v1",
+      "http://arxiv.org/abs/2511.20867v2",
+      "http://arxiv.org/abs/2510.11438v1",
+      "http://arxiv.org/abs/2509.08919v1",
+      "http://arxiv.org/abs/2507.03169v1",
+      "http://arxiv.org/abs/2311.09735v3"
     ]
   }
 }
