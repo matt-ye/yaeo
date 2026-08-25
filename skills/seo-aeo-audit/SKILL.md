@@ -203,6 +203,16 @@ noindex 是不進索引，nosnippet 是進了索引但 AI Overviews／AI Mode �
 `L3-GEO-SIGNALS-NONE` / `L3-GEO-SIGNALS-THIN` 只對 **Article 型頁面**檢查，
 數三件事：**外部引用網域數、統計數據處數、直接引言處數**。
 
+> ⚠ **引言的長度門檻分中西兩套**（`「」『』` 要 8 字、`"…"` 要 40 字元），
+> 理由與 title/description 的門檻同源：中文一字一義，8 字已是短句；
+> 8 個拉丁字元只有一兩個單字，套同一個數字會把 `"the fund"` 這種強調算成引言。
+>
+> 這是實測踩到的盲區：同一門課的週次頁，**中文版引言 18–27 處、英文版 0 處**——
+> 翻譯時把「」換成 `"…"`，整批訊號就消失，26 頁英文課程頁裡 24 頁被誤報成
+> 「缺直接引言」，而它們其實各有 21–23 處。
+> **同一份內容的兩個語言版本結果差這麼多，該先懷疑量測而不是內容。**
+> 由 `test/geo-quote-detection.test.mjs` 守著。
+
 這三項是下面「GEO 五戰術」裡唯一機械可偵測的部分（權威語氣與流暢度是語意判斷）。
 
 > ✅ **2026-08-17：這三項拿到逐特徵 ablation 了。**
@@ -584,6 +594,7 @@ node skills/seo-aeo-audit/test/lang-content-mismatch.test.mjs
 node skills/seo-aeo-audit/test/rule-index.test.mjs
 node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
+node skills/seo-aeo-audit/test/geo-quote-detection.test.mjs
 ```
 
 零相依，直接跑。59 條規則裡只有這幾條有測試——**不是因為別條不重要，
@@ -596,6 +607,7 @@ node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 | `L1-LANG-CONTENT-MISMATCH` | 判準**刻意單向**（宣告英文卻整塊中日韓可報，反之不可）。沒有反向斷言守著，遲早被改成對稱，然後整批誤判 |
 | 〈完整規則索引〉 | 宣稱「一條不漏」卻漏 4 條，因為抽取與驗證腳本**共用同一個盲點**。現在也守文件裡的筆數與測試清單 |
 | `L2-I18N-DICT-*` | 「英文欄位裡是中文」——**任何「有沒有填」的檢查都會判它通過**，因為欄位確實填了。只能比對值本身，而且「相同」不等於「未翻譯」 |
+| `L3-GEO-SIGNALS-*` 的引言判準 | 只認中文引號與 blockquote，拉丁引號 `"…"` 完全不算。**同一門課的週次頁中文版引言 18–27 處、英文版 0 處**，26 頁英文課程頁裡 24 頁被誤報。判準綁在書寫系統上，同一份內容會因語言得到不同結論 |
 | `noindex` 降級判準 | 同一原則**套得不均勻**（同一個 meta 欄位上 `L1-DESC-SHORT` 降 info、`L1-DESC-MISSING` 卻報 error）。而降級的邊界——**OG 不降**——是個很順口就會被人一起降掉的判斷，靠反向斷言釘住 |
 
 > ⚠ **`rule-index.test.mjs` 守的是文件，不是程式行為**，而文件會用你想不到的
