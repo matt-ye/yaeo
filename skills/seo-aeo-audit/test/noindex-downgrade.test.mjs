@@ -140,5 +140,35 @@ check(noindexAll.some((x) => x.code === 'L1-NOINDEX'),
   'noindex 頁仍報 L1-NOINDEX（唯一提示「這頁刻意不進索引」的訊號）',
   '      L1-NOINDEX 不見了——降級之後它是報告上唯一還在提醒 noindex 的東西');
 
+/*
+ * 站層級的補位：SITE-NOINDEX-UNLISTED。
+ *
+ * 降級之後 noindex 頁不再產生 error，被**誤標**的頁面因此沒有警訊——
+ * 除非它同時還留在 sitemap 裡（那由 SITE-SITEMAP-NOINDEX-CONFLICT 接住）。
+ * 兩者都不成立時就是缺口，這條補的就是它。
+ *
+ * 它**刻意不帶閾值**：不問「多少比例算異常」，只把清單攤開讓人逐一確認。
+ * 所以級別是 info——它報的是正常狀態，不是叫人去修。
+ * 反向斷言同樣重要：一般頁不可以誤報，否則每份報告都會多一條無意義的雜訊。
+ */
+const UNLISTED = 'SITE-NOINDEX-UNLISTED';
+const noindexSite = findingsFor(page({ noindex: true }));
+const indexedSite = findingsFor(page({ noindex: false }));
+
+check(levelOf(noindexSite, UNLISTED) === 'info',
+  `${UNLISTED}：noindex 且不在 sitemap 的頁面報 info（降級後唯一還看得到它們的地方）`,
+  `      實際 ${levelOf(noindexSite, UNLISTED) ?? '（完全沒報）'}，期望 info`);
+
+check(levelOf(indexedSite, UNLISTED) === null,
+  `⟲ 反向：一般頁不報 ${UNLISTED}（否則每份報告都多一條雜訊）`,
+  `      實際報了 ${levelOf(indexedSite, UNLISTED)} —— 這條只該對 noindex 頁說話`);
+
+/* 訊息裡要有實際路徑：這條的全部價值就是「能一眼掃過去」，
+   只給數字等於沒補這個缺口 */
+const unlistedMsg = (noindexSite.find((x) => x.code === UNLISTED) ?? {}).msg ?? '';
+check(/index\.html|\/(?=[^\s])|\//.test(unlistedMsg) && unlistedMsg.length > 20,
+  `${UNLISTED} 的訊息帶出實際頁面路徑，不是只給一個數字`,
+  `      訊息：${unlistedMsg || '（空）'}`);
+
 console.log(failed ? `\n${failed} 項未通過` : '\n全部通過');
 process.exit(failed ? 1 : 0);

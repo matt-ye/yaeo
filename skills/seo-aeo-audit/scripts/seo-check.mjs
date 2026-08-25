@@ -897,17 +897,43 @@ function auditSite(pages, root) {
      常見於 build 流程忘了把草稿/儀表板頁排除，會浪費爬蟲預算並送出矛盾訊號。 */
   const sitemapFile = ['sitemap-0.xml', 'sitemap.xml', 'sitemap-index.xml']
     .map((n) => join(root, n)).find((p) => existsSync(p));
+  /* listed 提到 if 外面：沒有 sitemap 的站，下面那條「noindex 且不在 sitemap」
+     仍然該報——那種情況下每一個 noindex 頁都符合。 */
+  const listed = new Set(
+    sitemapFile
+      ? [...readFileSync(sitemapFile, 'utf8').matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)]
+          .map((m) => m[1].replace(/^https?:\/\/[^/]+/, '').replace(/\/$/, ''))
+      : [],
+  );
+  const noindexPaths = pages
+    .filter((p) => p.meta.noindex)
+    .map((p) => '/' + p.page.replace(/index\.html$/, '').replace(/\/$/, ''));
+  const inSitemap = (path) => listed.has(path) || listed.has(path.replace(/\/$/, ''));
+
   if (sitemapFile) {
-    const xml = readFileSync(sitemapFile, 'utf8');
-    const listed = new Set([...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)]
-      .map((m) => m[1].replace(/^https?:\/\/[^/]+/, '').replace(/\/$/, '')));
-    const conflict = pages
-      .filter((p) => p.meta.noindex)
-      .map((p) => '/' + p.page.replace(/index\.html$/, '').replace(/\/$/, ''))
-      .filter((path) => listed.has(path) || listed.has(path.replace(/\/$/, '')));
+    const conflict = noindexPaths.filter(inSitemap);
     if (conflict.length) {
       add('warn', 'SITE-SITEMAP-NOINDEX-CONFLICT', `${conflict.length} 個 noindex 頁面仍列在 sitemap 裡（${conflict.slice(0, 3).join('、')}）——等於邀請爬蟲來看一個叫它別看的頁`);
     }
+  }
+
+  /* 上面那條的補集。存在理由是一個**刻意留下的缺口**：
+     noindex 頁的規則已依「後果只發生在搜尋結果裡」的判準降成 info
+     （見 SKILL.md〈noindex 頁的降級判準〉），所以這些頁不再產生任何 error。
+     被**誤標**成 noindex 的頁面因此不會有任何警訊——除非它同時還留在
+     sitemap 裡，那由上面那條 warn 接住。兩者都不成立時就沒有守衛了。
+
+     這條補的就是那個缺口，而且刻意**不帶任何閾值**：
+     不問「多少比例算異常」（沒有可靠依據，那會變成又一個憑感覺的數字，
+     正好違反〈調整門檻時的原則〉），只把事實列出來讓人逐一確認。
+     所以它是 info 而不是 warn——**這是 unlisted 頁的正常樣子**，
+     報出來是為了讓人看得到，不是為了叫人去修。 */
+  const unlisted = noindexPaths.filter((p) => !inSitemap(p));
+  if (unlisted.length) {
+    const SHOWN = 10; // 只是顯示上限，不是判斷閾值；完整清單看各頁的 L1-NOINDEX
+    const shown = unlisted.slice(0, SHOWN).join('、');
+    const more = unlisted.length > SHOWN ? `⋯等 ${unlisted.length} 個（完整清單見各頁的 L1-NOINDEX）` : '';
+    add('info', 'SITE-NOINDEX-UNLISTED', `${unlisted.length} 個頁面 noindex 且不在 sitemap 裡，對搜尋完全隱形${sitemapFile ? '' : '（本站沒有 sitemap）'}：${shown}${more}——逐一確認都是刻意的`);
   }
 
   /* 內部連結指向不存在的頁面。這裡只驗站內絕對路徑，外連交給專門的連結健檢。

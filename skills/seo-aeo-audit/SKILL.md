@@ -444,12 +444,18 @@ FeatGEO 的 `list_density`、[SAGEO Arena](https://arxiv.org/abs/2602.12187) 的
 「刻意 noindex」與「該修卻沒修」就再也分不開，而這份檢核器是靠 **error 歸零**
 當驗收標準的。測試同時守著這一點。
 
-> **殘留風險，要知道**：降級之後，一個被**誤標**成 noindex 的頁面不會再有任何
-> `error`，而 `L1-NOINDEX` 本身只是 `info`。目前擋這個風險的是
-> `SITE-SITEMAP-NOINDEX-CONFLICT`（`warn`）——build 流程誤標通常會留下
-> 「noindex 卻仍在 sitemap 裡」的矛盾。**但若該頁同時被排除在 sitemap 之外，
-> 就沒有守衛了。** 這個缺口目前刻意不補：補它要新增站層級規則與閾值，
-> 而「多少比例的頁面 noindex 算異常」沒有可靠依據，會變成又一個憑感覺的數字。
+**降級之後誰來接住「誤標 noindex」？** 兩條站層級規則把 noindex 頁分完：
+
+| 狀況 | 規則 | 級別 |
+|---|---|---|
+| noindex **卻仍在** sitemap 裡 | `SITE-SITEMAP-NOINDEX-CONFLICT` | `warn`——訊號矛盾，多半是 build 漏排除 |
+| noindex **且不在** sitemap 裡 | `SITE-NOINDEX-UNLISTED` | `info`——正常形態，但列出來讓人逐一確認 |
+
+> 第二條**刻意不帶任何閾值**。原本的選項是「noindex 頁佔比超過 X% 就報」，
+> 但「多少比例算異常」沒有可靠依據——那會變成又一個憑感覺的數字，
+> 正好違反本節開頭立的規矩。所以它不做判斷，只把清單攤開：
+> **降級讓這些頁不再產生 error，那至少要有一個地方能一眼掃過去。**
+> 也因為它報的是正常狀態，級別是 `info` 而不是 `warn`——它不是叫你去修。
 
 ## 已知限制
 
@@ -643,7 +649,7 @@ node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 
 ## 完整規則索引
 
-**59 條規則**：L1 13／L2 29／L3 4／SITE 13。
+**60 條規則**：L1 13／L2 29／L3 4／SITE 14。
 上面〈逐項怎麼修〉是策展過的常見項，這裡是全部。
 
 > 這份索引由 `test/rule-index.test.mjs` 守著：新增規則卻沒補進來，測試會失敗並
@@ -715,12 +721,13 @@ node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 | `L3-GEO-SIGNALS-NONE` | info | Article 完全沒有可引用訊號（統計、引述、出處） |
 | `L3-GEO-SIGNALS-THIN` | info | 可引用訊號偏少。**刻意不給目標數字**——論文沒有提供閾值 |
 
-### SITE 站層級（13）
+### SITE 站層級（14）
 
 | 代碼 | 級別 | 是什麼 |
 |---|---|---|
 | `SITE-ROBOTS-MISSING` | error | 沒有 robots.txt |
 | `SITE-SITEMAP-MISSING` | error | 沒有 sitemap |
+| `SITE-NOINDEX-UNLISTED` | info | noindex 且不在 sitemap 的頁面清單。**不帶閾值、只列事實**——這是 unlisted 頁的正常樣子，報出來是因為降級後這些頁不再產生任何 error，需要有一個地方能一眼掃過去確認都是刻意的 |
 | `SITE-SITEMAP-NOINDEX-CONFLICT` | warn | sitemap 邀請爬蟲來看一個標了 `noindex` 的頁——矛盾訊號 |
 | `SITE-TITLE-DUP` | error | 多頁共用同一個 `<title>`＝告訴搜尋引擎這幾頁是重複內容 |
 | `SITE-DESC-DUP` | warn | 多頁共用同一段 description |
