@@ -131,6 +131,18 @@ function auditPage(rawHtml, page) {
   const html = rawHtml;
   const dom = stripScripts(rawHtml);
 
+  /* noindex 頁的降級原則（整份檢核器共用，所以在最前面就算好）。
+     判準是「這條規則的後果是不是只發生在搜尋結果裡」：
+     是 → noindex 頁降 info，因為它不是沒修，是本來就不適用；
+     否 → 維持原級別。
+
+     ⚠ **OG／Twitter Card 不在降級之列，這是刻意的判斷**：
+     noindex 擋的是**索引**，不是**分享**。unlisted 頁往往正是靠連結傳播，
+     貼到 Slack／Threads 的預覽卡長什麼樣，對這種頁反而比對一般頁更重要。
+     把 OG 一起降級，等於用「搜尋看不到」推論「分享也不重要」——不成立。 */
+  const robotsMeta = metaContent(html, 'robots');
+  const isNoindex = Boolean(robotsMeta && /noindex/i.test(robotsMeta));
+
   // ---- L1 技術基礎 ----
   const titleM = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleM ? stripTags(titleM[1]) : null;
@@ -180,19 +192,25 @@ function auditPage(rawHtml, page) {
   }
 
   const desc = metaContent(html, 'description');
-  if (!desc) add('error', 'L1-DESC-MISSING', 'meta description 缺失');
+  /* description 只在 SERP 上有作用；noindex 頁不會出現在 SERP。
+     這條原本報 error，而同一個欄位的 L1-DESC-SHORT 早就降 info 了——
+     同一個原則套在同一個欄位上卻兩套標準，先修掉這個不一致。 */
+  if (!desc) add(isNoindex ? 'info' : 'error', 'L1-DESC-MISSING', `meta description 缺失${isNoindex ? '——本頁已 noindex，不會出現在 SERP' : ''}`);
   else {
     const L = limitsFor(desc);
     if (desc.length > L.descMax) add('warn', 'L1-DESC-LONG', `meta description ${desc.length} 字元，超過 ${L.descMax}`);
     /* description 的作用是提高 SERP 點擊率——noindex 的頁面不會出現在 SERP，
        所以「說服力不足」對它不成立。降成 info，讓 warn 只留下真的該修的。 */
     else if (desc.length < L.descMin) {
-      const noindexHere = /noindex/i.test(metaContent(html, 'robots') || '');
-      add(noindexHere ? 'info' : 'warn', 'L1-DESC-SHORT', `meta description 僅 ${desc.length} 字元，說服力不足（決定 SERP 點擊率）${noindexHere ? '——本頁已 noindex，不會出現在 SERP' : ''}`);
+      add(isNoindex ? 'info' : 'warn', 'L1-DESC-SHORT', `meta description 僅 ${desc.length} 字元，說服力不足（決定 SERP 點擊率）${isNoindex ? '——本頁已 noindex，不會出現在 SERP' : ''}`);
     }
   }
 
-  if (!/<link[^>]*rel\s*=\s*["']canonical["']/i.test(html)) add('warn', 'L1-CANONICAL-MISSING', '無 canonical');
+  if (!/<link[^>]*rel\s*=\s*["']canonical["']/i.test(html)) {
+    /* canonical 的作用是把重複內容的索引訊號合併到同一個網址。
+       noindex 頁不進索引，沒有訊號要合併。 */
+    add(isNoindex ? 'info' : 'warn', 'L1-CANONICAL-MISSING', `無 canonical${isNoindex ? '——本頁已 noindex，沒有索引訊號要合併' : ''}`);
+  }
 
   for (const [key, prop, code] of [
     ['og:title', 'property', 'L1-OG-TITLE'],
@@ -212,8 +230,7 @@ function auditPage(rawHtml, page) {
   const lang = langM ? attr(langM[0], 'lang') : null;
   if (!lang) add('warn', 'L1-LANG-MISSING', '<html> 無 lang 屬性');
 
-  const robotsMeta = metaContent(html, 'robots');
-  if (robotsMeta && /noindex/i.test(robotsMeta)) add('info', 'L1-NOINDEX', `此頁標記 noindex（${robotsMeta}）—— 確認是刻意的`);
+  if (isNoindex) add('info', 'L1-NOINDEX', `此頁標記 noindex（${robotsMeta}）—— 確認是刻意的`);
 
   /* 快照資格是生成式 AI 功能的**前提**，不是加分項。Google 官方原文：
        "To be eligible to be shown in generative AI features on Google Search,
@@ -308,8 +325,8 @@ function auditPage(rawHtml, page) {
   ];
   /* noindex 的頁面不報成 error：它本來就不進索引，「爬蟲看不到內容」不構成問題。
      但仍然值得留一筆紀錄，讓「刻意 noindex」與「該修卻沒修」在報表上分得開
-     ——把兩者混在同一個數字裡，就沒辦法用 error 歸零當驗收標準。 */
-  const isNoindex = Boolean(robotsMeta && /noindex/i.test(robotsMeta));
+     ——把兩者混在同一個數字裡，就沒辦法用 error 歸零當驗收標準。
+     （isNoindex 在 auditPage 開頭統一計算，見該處對 OG 為何不降級的說明。） */
   /* 這裡真的要用「組合拳」——只看佔位會把兩種完全不同的情況混為一談：
        ① 整頁是空殼，核心內容全靠 fetch      → 嚴重，爬蟲什麼都拿不到
        ② 正文完整，只有某一區動態載入（留言板、
@@ -645,7 +662,11 @@ function auditPage(rawHtml, page) {
   });
   const uniqueInternal = new Set(internal.map((h) => h.split('#')[0].replace(/\/$/, '')));
   if (uniqueInternal.size < MIN_INTERNAL_LINKS) {
-    add('error', 'L2-NO-INTERNAL-LINKS', '沒有任何出站內部連結（孤島頁）—— 讀者與爬蟲都走不到下一頁');
+    /* 「孤島頁」的傷害有兩半：爬蟲走不到（索引／連結權重）與讀者走不到（動線）。
+       noindex 頁只剩後者，而那是 UX 問題不是 SEO 問題——這份檢核器不管 UX，
+       所以降 info 但保留紀錄。⚠ 這條的降級理由比另外三條弱，若哪天要收回，
+       先收這條。 */
+    add(isNoindex ? 'info' : 'error', 'L2-NO-INTERNAL-LINKS', `沒有任何出站內部連結（孤島頁）—— 讀者與爬蟲都走不到下一頁${isNoindex ? '——本頁已 noindex，索引面不受影響，僅剩讀者動線' : ''}`);
   } else if (uniqueInternal.size < 3) {
     add('info', 'L2-FEW-INTERNAL-LINKS', `僅 ${uniqueInternal.size} 個不重複內部連結`);
   }
@@ -686,7 +707,9 @@ function auditPage(rawHtml, page) {
       add('error', 'L2-JSONLD-INVALID', 'JSON-LD 區塊解析失敗（語法錯誤）');
     }
   }
-  if (ldBlocks.length === 0) add('warn', 'L2-JSONLD-MISSING', '沒有 JSON-LD 結構化資料');
+  /* 結構化資料的產出是複合式搜尋結果與 AI 引用，兩者都以「已被索引」為前提
+     （見 L3-AI-SNIPPET-BLOCKED 引的 Google 原文）。noindex 頁兩者都拿不到。 */
+  if (ldBlocks.length === 0) add(isNoindex ? 'info' : 'warn', 'L2-JSONLD-MISSING', `沒有 JSON-LD 結構化資料${isNoindex ? '——本頁已 noindex，複合式結果與 AI 引用都以索引為前提' : ''}`);
   /* 首頁不需要麵包屑——它就是路徑的起點，「首頁 > 首頁」沒有意義，
      Google 的結構化資料文件也只把 BreadcrumbList 用在有上層路徑的頁面。
      語言前綴的首頁（/en/）同理。 */

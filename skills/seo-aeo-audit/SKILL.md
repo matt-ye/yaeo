@@ -421,6 +421,36 @@ FeatGEO 的 `list_density`、[SAGEO Arena](https://arxiv.org/abs/2602.12187) 的
 （這條紀律與 `PROMPT_連結驗證與來源查核SOP.md` 的「降噪本身就是修復」同源）。
 所以：如果某個檢核項在正常內容上大量觸發，先懷疑門檻設錯，不要叫使用者去改一百頁。
 
+### noindex 頁的降級判準——以及 OG 為什麼不降
+
+判準只有一句話：**這條規則的後果是不是只發生在搜尋結果裡。**
+是 → noindex 頁降 `info`（它不是沒修，是本來就不適用）；否 → 維持原級別。
+
+目前依此降級的有四條：`L1-DESC-MISSING`、`L1-CANONICAL-MISSING`、
+`L2-JSONLD-MISSING`、`L2-NO-INTERNAL-LINKS`（`L1-DESC-SHORT`、`L2-THIN-CONTENT`、
+`L2-CLIENT-RENDERED` 先前就已依同一原則處理）。
+
+> 這件事的起因是**原則套得不均勻**：同一個 meta 欄位上，`L1-DESC-SHORT` 早就降
+> `info` 了，`L1-DESC-MISSING` 卻仍報 `error`。不一致比嚴格或寬鬆都糟——
+> 它讓人不知道該相信哪一邊。
+
+**⚠ OG／Twitter Card 不降，這是刻意的判斷。**
+`noindex` 擋的是**索引**，不是**分享**。unlisted 頁往往正是靠連結傳播——
+貼到 Slack／Threads 的預覽卡長什麼樣，對這種頁反而比對一般頁**更**重要。
+「搜尋看不到 → 分享也不重要」是不成立的推論，但它很順口，所以
+`test/noindex-downgrade.test.mjs` 用反向斷言把它釘住。
+
+**降級不等於消音。** 那四條降成 `info` 之後仍然要出現在報告裡，否則
+「刻意 noindex」與「該修卻沒修」就再也分不開，而這份檢核器是靠 **error 歸零**
+當驗收標準的。測試同時守著這一點。
+
+> **殘留風險，要知道**：降級之後，一個被**誤標**成 noindex 的頁面不會再有任何
+> `error`，而 `L1-NOINDEX` 本身只是 `info`。目前擋這個風險的是
+> `SITE-SITEMAP-NOINDEX-CONFLICT`（`warn`）——build 流程誤標通常會留下
+> 「noindex 卻仍在 sitemap 裡」的矛盾。**但若該頁同時被排除在 sitemap 之外，
+> 就沒有守衛了。** 這個缺口目前刻意不補：補它要新增站層級規則與閾值，
+> 而「多少比例的頁面 noindex 算異常」沒有可靠依據，會變成又一個憑感覺的數字。
+
 ## 已知限制
 
 - 正則解析，不是 DOM 解析：巢狀異常結構可能誤判。發現誤判時回頭修腳本的正則，不要改結論遷就工具
@@ -547,6 +577,7 @@ node skills/seo-aeo-audit/test/bilingual-concat.test.mjs
 node skills/seo-aeo-audit/test/lang-content-mismatch.test.mjs
 node skills/seo-aeo-audit/test/rule-index.test.mjs
 node skills/seo-aeo-audit/test/i18n-dict.test.mjs
+node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 ```
 
 零相依，直接跑。59 條規則裡只有這幾條有測試——**不是因為別條不重要，
@@ -559,6 +590,7 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 | `L1-LANG-CONTENT-MISMATCH` | 判準**刻意單向**（宣告英文卻整塊中日韓可報，反之不可）。沒有反向斷言守著，遲早被改成對稱，然後整批誤判 |
 | 〈完整規則索引〉 | 宣稱「一條不漏」卻漏 4 條，因為抽取與驗證腳本**共用同一個盲點**。現在也守文件裡的筆數與測試清單 |
 | `L2-I18N-DICT-*` | 「英文欄位裡是中文」——**任何「有沒有填」的檢查都會判它通過**，因為欄位確實填了。只能比對值本身，而且「相同」不等於「未翻譯」 |
+| `noindex` 降級判準 | 同一原則**套得不均勻**（同一個 meta 欄位上 `L1-DESC-SHORT` 降 info、`L1-DESC-MISSING` 卻報 error）。而降級的邊界——**OG 不降**——是個很順口就會被人一起降掉的判斷，靠反向斷言釘住 |
 
 > ⚠ **`rule-index.test.mjs` 守的是文件，不是程式行為**，而文件會用你想不到的
 >方式漂。它抓過三次同類錯誤：規則索引漏列、小節標題數字沒跟著改、
@@ -630,10 +662,10 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 | `L1-TITLE-LONG` | warn | 標題的**資訊核心**過長。量核心不量全長——SERP 從尾端截斷，站名後綴被截掉不損失資訊 |
 | `L1-TITLE-SHORT` | warn | 標題**全長**過短。這裡量全長，因為後綴會顯示出來，站名也是資訊 |
 | `L1-TITLE-REPEATED` | warn | 標題裡站名重複（頁面自己帶了一次、版型又補一次後綴）。長度檢查抓不到，各段分開看都不長 |
-| `L1-DESC-MISSING` | error | 缺 meta description |
+| `L1-DESC-MISSING` | error／info | 缺 meta description。noindex 頁降 info（不會出現在 SERP） |
 | `L1-DESC-LONG` | warn | description 超過門檻。**中文 90／英文 160**，依 CJK 佔比自動切換 |
 | `L1-DESC-SHORT` | warn／info | description 過短，說服力不足（它決定 SERP 點擊率）。noindex 頁降 info |
-| `L1-CANONICAL-MISSING` | warn | 缺 canonical，有查詢參數的頁面尤其重要 |
+| `L1-CANONICAL-MISSING` | warn／info | 缺 canonical，有查詢參數的頁面尤其重要。noindex 頁降 info（沒有索引訊號要合併） |
 | `L1-LANG-MISSING` | warn | `<html>` 沒有 `lang` 屬性 |
 | `L1-LANG-CONTENT-MISMATCH` | warn／info | 宣告的語言與正文實際語言不符。**只計算沒有用 `lang` 標記的外語**——已標記代表作者知道也標對了，那不是缺陷。warn＝未標記的外語明顯多於本文語言；info＝介面元件（`<option>`／`<button>` 等）沒跟著換語言 |
 | `L1-NOINDEX` | info | 此頁標了 `noindex`——確認是刻意的 |
@@ -656,12 +688,12 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 | `L2-H1-MULTIPLE` | warn | 多個 `h1` |
 | `L2-HEADING-SKIP` | warn | 標題階層跳級。**根因常在缺的那一層，不是被報的那一層** |
 | `L2-TITLE-NOT-HEADING` | info | 卡片標題不是 heading。數量通常很大，**不要全改**——挑真的需要被讀成清單的地方 |
-| `L2-NO-INTERNAL-LINKS` | error | 孤島頁，讀者與爬蟲都走不到下一頁 |
+| `L2-NO-INTERNAL-LINKS` | error／info | 孤島頁，讀者與爬蟲都走不到下一頁。noindex 頁降 info（索引面傷害消失，只剩讀者動線）——⚠ 這條的降級理由比其他三條弱，要收回先收它 |
 | `L2-FEW-INTERNAL-LINKS` | info | 不重複內部連結少於 3 個 |
 | `L2-IMG-ALT-MISSING` | error | 圖片沒有 `alt` 屬性 |
 | `L2-IMG-ALT-EMPTY` | info | `alt=""`——僅裝飾性圖片才該如此 |
 | `L2-JSONLD-INVALID` | error | JSON-LD 語法錯誤，整段會被忽略，等於沒寫 |
-| `L2-JSONLD-MISSING` | warn | 完全沒有結構化資料 |
+| `L2-JSONLD-MISSING` | warn／info | 完全沒有結構化資料。noindex 頁降 info（複合式結果與 AI 引用都以已被索引為前提） |
 | `L2-ARTICLE-NO-DATE` | error | Article 型缺 `datePublished` |
 | `L2-ARTICLE-NO-AUTHOR` | warn | Article 型缺 `author`。**YMYL 的第一要件是「誰寫的」** |
 | `L2-FUTURE-DATE` | warn | `datePublished` 在未來＝頁面已上線卻宣稱未發佈。多半是把排程日當發佈日 |
