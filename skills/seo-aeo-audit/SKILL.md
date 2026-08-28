@@ -70,12 +70,56 @@ node scripts/psi-check.mjs --url https://example.com/ --key-env GOOGLE_PSI_API_K
 > ⚠ **API key 不綁被測網域**——key 只決定配額算在哪個 GCP 專案，任何 key 都能測任何網址。
 > 多把 key 的用途是配額分開計費，不是存取控制。
 
-**兩支腳本查的東西不重疊，都要跑**：`seo-check.mjs` 看結構與內容，`psi-check.mjs` 看效能。
+**三支腳本查的東西不重疊**：`seo-check.mjs` 看結構與內容（離線掃 dist）、`psi-check.mjs` 看效能、
+`agent-check.mjs` 看 agent 可操作性（連線打線上站）。前兩支發佈前跑，第三支部署後跑。
 Lighthouse 的 SEO 分數（psi 會印）只驗表層——實測某站 **SEO 100 分，但 h2 掛零、
 主要內容不在 HTML、LCP 106 秒**。**不要把那個 100 分當作 SEO 沒問題。**
 
 **先讀懂輸出的分級**：`error` 是爬蟲層面的實質損失，`warn` 是品質折損，`info` 是提醒。
 不要追求歸零——`noindex`、裝飾性 `alt=""` 這類是刻意設計，出現在 info 是正常的。
+
+### 連線層：`agent-check.mjs`
+
+檢核 **agent 能不能操作這個網站**——HTTP 狀態碼、機器可讀檔的線上可取性、內容協商。
+
+```bash
+node scripts/agent-check.mjs --site https://example.com
+```
+
+參數：`--json`、`--fail-on warn`。離開碼：0 通過／1 有問題／2 參數錯。
+
+> ⚠ **檢核的是已部署的線上網站，不是 `./dist`。** deploy 之後才跑得有意義。
+
+**為什麼另開一支，而不是加進 `seo-check.mjs`**：那支是純檔案系統掃描器（全檔零 `fetch`），
+而這裡每一條規則都要發真實 HTTP 請求才驗得出來。把網路塞進去會毀掉它
+「離線、可重現、CI 不需連外」的性質——`test/agent-check-rules.test.mjs` 有一條斷言釘住這件事。
+
+整支跑完個位數請求，請求間留 300ms，UA 表明身分（`yaeo-agent-check/1.0`）。
+
+**10 條規則**：
+
+| 代碼 | 級 | 抓什麼 | 修完怎麼確認 |
+|---|---|---|---|
+| `AGENT-SOFT-404` | error | 不存在的路徑回 HTTP 200 | `curl -o /dev/null -w "%{http_code}" <站>/不存在的路徑` 要印 404 |
+| `AGENT-404-STATUS` | warn | 不存在的路徑既非 200 也非 404/410 | 同上，確認狀態碼是刻意的 |
+| `AGENT-404-NO-POINTER` | info | 404 頁沒有指向 sitemap／llms.txt／首頁 | 重跑，該條消失 |
+| `AGENT-ROBOTS-UNREACHABLE` | error | robots.txt 線上取不到，或回 HTML 空殼 | 直接開網址，看 Content-Type |
+| `AGENT-LLMSTXT-UNREACHABLE` | warn | llms.txt 線上取不到，或回 HTML 空殼 | 同上 |
+| `AGENT-SITEMAP-UNREACHABLE` | error | `/sitemap.xml` 與 `/sitemap-index.xml` 都取不到 | 直接開網址 |
+| `AGENT-SITEMAP-PROBE-GAP` | info／warn | `/sitemap.xml` 404、實際在 `/sitemap-index.xml` | robots.txt 有宣告就是 info，**那不是錯誤** |
+| `AGENT-MD-NEGOTIATION` | info | `Accept: text/markdown` 沒有內容協商 | 順便報 HTML 有多少比例不是正文 |
+| `AGENT-MACHINE-CATALOG` | info | 有沒有 `.well-known` 機器可讀目錄 | 沒 API 就該是空的，**不要補空殼** |
+| `AGENT-PROBE-FAILED` | warn | 某次探測連不上 | **這條代表「無法判定」，不是通過** |
+
+> ⚠ **`info` 那幾條不是待辦清單。** 內容站沒有 API 就不該有 `openapi.json`；
+> `/sitemap.xml` 404 而 robots.txt 宣告正確**不是錯誤**，是 Astro 等框架的預設產物形狀。
+> 為了迎合檢查器的探測習慣去改一個本來正確的設定，是把工具的方便當成網站的目標。
+
+**出處與界線**：規則對應 [Is Agentic](https://is-agentic.com/)（Vercel × Ora，2026-08）
+公開報告中出現過的檢查項，以及 RFC 9309、llmstxt.org。
+⚠ **Is Agentic 的完整檢查清單不公開**——官方稱 127 項，一項名稱都不列，公開報告也只列
+失敗與 partial。所以這裡只實作「從公開報告逆推得到、且語意明確」的少數幾條，
+**不宣稱涵蓋它的評分，也不試圖重現它的分數**。它的分數不可審計，不該當診斷訊號用。
 
 ### 先看正文在不在，再看結構對不對
 
@@ -595,6 +639,7 @@ node skills/seo-aeo-audit/test/rule-index.test.mjs
 node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 node skills/seo-aeo-audit/test/geo-quote-detection.test.mjs
+node skills/seo-aeo-audit/test/agent-check-rules.test.mjs
 ```
 
 零相依，直接跑。59 條規則裡只有這幾條有測試——**不是因為別條不重要，
@@ -608,6 +653,7 @@ node skills/seo-aeo-audit/test/geo-quote-detection.test.mjs
 | 〈完整規則索引〉 | 宣稱「一條不漏」卻漏 4 條，因為抽取與驗證腳本**共用同一個盲點**。現在也守文件裡的筆數與測試清單 |
 | `L2-I18N-DICT-*` | 「英文欄位裡是中文」——**任何「有沒有填」的檢查都會判它通過**，因為欄位確實填了。只能比對值本身，而且「相同」不等於「未翻譯」 |
 | `L3-GEO-SIGNALS-*` 的引言判準 | 只認中文引號與 blockquote，拉丁引號 `"…"` 完全不算。**同一門課的週次頁中文版引言 18–27 處、英文版 0 處**，26 頁英文課程頁裡 24 頁被誤報。判準綁在書寫系統上，同一份內容會因語言得到不同結論 |
+| 〈連線層〉規則表 | 新增一支會報代碼的腳本，就得同時新增守著它的測試——這個 repo 的文件數字**漂過三次**。順便釘住「`seo-check.mjs` 維持零 `fetch`」，那是兩支分家的理由本身 |
 | `noindex` 降級判準 | 同一原則**套得不均勻**（同一個 meta 欄位上 `L1-DESC-SHORT` 降 info、`L1-DESC-MISSING` 卻報 error）。而降級的邊界——**OG 不降**——是個很順口就會被人一起降掉的判斷，靠反向斷言釘住 |
 
 > ⚠ **`rule-index.test.mjs` 守的是文件，不是程式行為**，而文件會用你想不到的
