@@ -2,6 +2,7 @@
   "_comment": "看過的項目 ID。避免同幾篇論文每個月重報一次。空的 seen = 首次執行，全部項目都算新的。",
   "seen": {
     "gsc-blog": [
+      "2026-08-28-Update-to-the-Site-Reputation-Policy",
       "2026-07-29-Platform-properties-roll-out-globally,-plus-a-new-social-and-video-performance-guide",
       "2026-07-07-See-how-content-from-social-and-video-platforms-performs-on-Google-Search",
       "2026-07-06-Search-Central-Deep-Dive-Europe-2026:-Apparently-we're-going-to-Barcelona",
@@ -14,6 +15,9 @@
       "2026-03-31-Inside-Googlebot:-demystifying-crawling,-fetching,-and-the-bytes-we-process"
     ],
     "arxiv-geo": [
+      "http://arxiv.org/abs/2608.30466v1",
+      "http://arxiv.org/abs/2608.29063v1",
+      "http://arxiv.org/abs/2608.27631v1",
       "http://arxiv.org/abs/2608.16824v2",
       "http://arxiv.org/abs/2608.11390v1",
       "http://arxiv.org/abs/2607.20730v1",
