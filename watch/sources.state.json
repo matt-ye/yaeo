@@ -1,95 +1,95 @@
 {
   "rater-guidelines": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "lastModified": "Thu, 11 Sep 2025 17:38:00 GMT",
     "size": "8969290"
   },
   "geo-paper": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "3"
   },
   "seo-starter-guide": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2025-12-10"
   },
   "robots-spec": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2026-08-31"
   },
   "structured-data": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2026-06-15"
   },
   "llmstxt-stance": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2026-07-10"
   },
   "material-symbols-ligature": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2024-09-26"
   },
   "geo-survey-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "what-gets-cited-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "geo-sfe-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "citation-failures-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "discovery-gap-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "measure-once-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "sageo-arena-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "2"
   },
   "featgeo-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "ai-search-earned-media-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "existence-gap-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "1"
   },
   "e-geo-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "version": "2"
   },
   "spam-policies": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "updated": "2026-08-28"
   },
   "llmstxt-ahrefs-2026": {
-    "checkedAt": "2026-08-24",
-    "hash": "bcbd53aa0403"
+    "checkedAt": "2026-10-01",
+    "hash": "6646cfdd23a5"
   },
   "llmstxt-coding-agents-2026": {
-    "checkedAt": "2026-08-25",
-    "hash": "01090fb6fb5f"
+    "checkedAt": "2026-10-01",
+    "hash": "6646cfdd23a5"
   },
   "llmstxt-seranking-2026": {
-    "checkedAt": "2026-09-01",
-    "hash": "e29ab5954a48"
+    "checkedAt": "2026-10-01",
+    "hash": "84887f481953"
   },
   "llmstxt-otterly-2026": {
-    "checkedAt": "2026-09-01",
+    "checkedAt": "2026-10-01",
     "hash": "d41d8cd98f00"
   }
 }
