@@ -640,6 +640,7 @@ node skills/seo-aeo-audit/test/i18n-dict.test.mjs
 node skills/seo-aeo-audit/test/noindex-downgrade.test.mjs
 node skills/seo-aeo-audit/test/geo-quote-detection.test.mjs
 node skills/seo-aeo-audit/test/agent-check-rules.test.mjs
+node skills/seo-aeo-audit/test/fake-heading.test.mjs
 ```
 
 零相依，直接跑。59 條規則裡只有這幾條有測試——**不是因為別條不重要，
@@ -655,6 +656,7 @@ node skills/seo-aeo-audit/test/agent-check-rules.test.mjs
 | `L3-GEO-SIGNALS-*` 的引言判準 | 只認中文引號與 blockquote，拉丁引號 `"…"` 完全不算。**同一門課的週次頁中文版引言 18–27 處、英文版 0 處**，26 頁英文課程頁裡 24 頁被誤報。判準綁在書寫系統上，同一份內容會因語言得到不同結論 |
 | 〈連線層〉規則表 | 新增一支會報代碼的腳本，就得同時新增守著它的測試——這個 repo 的文件數字**漂過三次**。順便釘住「`seo-check.mjs` 維持零 `fetch`」，那是兩支分家的理由本身 |
 | `noindex` 降級判準 | 同一原則**套得不均勻**（同一個 meta 欄位上 `L1-DESC-SHORT` 降 info、`L1-DESC-MISSING` 卻報 error）。而降級的邊界——**OG 不降**——是個很順口就會被人一起降掉的判斷，靠反向斷言釘住 |
+| `L2-FAKE-HEADING` | 只看 class 名稱，把**包住真正 `<h3>` 的容器**（`<div class="section-title"><h3>…</h3></div>`）也報成 error。實測是一個網站上線前審核裡**唯一剩下的 error**——誤判正好落在「error 歸零」這個驗收標準上。反向斷言守著真正冒充標題的 `<p>`／`<div>` 仍要報 |
 
 > ⚠ **`rule-index.test.mjs` 守的是文件，不是程式行為**，而文件會用你想不到的
 >方式漂。它抓過三次同類錯誤：規則索引漏列、小節標題數字沒跟著改、
