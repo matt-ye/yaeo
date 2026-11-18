@@ -285,6 +285,9 @@ function auditPage(rawHtml, page) {
   // 「p/div 冒充 heading」—— 視覺像標題、語意不是。這是本專案實際踩過的坑。
   // 只掃 dom（剝過 script），否則會抓到 JS 樣板字串。
   const titleish = [...dom.matchAll(/<(p|div|span)\b([^>]*class\s*=\s*["'][^"']*(heading|title)[^"']*["'][^>]*)>([\s\S]{0,200}?)<\/\1>/gi)]
+    // 裡面已經有真正的 <h1>～<h6>：這是包住標題的容器，不是冒充標題的元素。
+    // 實例：<div class="section-title"><h3>我的專屬申請清單</h3><span>…</span></div> 被報成 error。
+    .filter((m) => !/<h[1-6]\b/i.test(m[4]))
     .map((m) => ({ tag: m[1].toLowerCase(), cls: attr(`<x ${m[2]}>`, 'class') || '', text: stripTags(m[4]) }))
     .filter((x) => x.text.length > 0 && x.text.length < 120);
 
